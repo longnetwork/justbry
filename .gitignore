@@ -1,0 +1,17 @@
+**/__pycache__
+*.py[cod]
+*$py.class
+
+.venv/
+
+*.log
+
+pidfile
+
+.idea
+
+
+build/
+*.egg-info/
+
+
