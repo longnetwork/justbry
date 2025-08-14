@@ -8,4 +8,4 @@ RUN pip install --no-cache-dir --force-reinstall git+https://github.com/longnetw
 
 EXPOSE 8000
 
-CMD ["python", "-m", "uvicorn", "--host", "0.0.0.0", "--port", "8000", "justbry.demo.bulma:app"]
+CMD ["python", "-m", "uvicorn", "--host", "0.0.0.0", "--port", "8000", "justbry.demo.morph:app"]
