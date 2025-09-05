@@ -44,7 +44,9 @@ class DomMorph(DomHtml):
             
             Cmp('script', type="text/python", id='morpher')(    # XXX id это имя модуля доступного через import и не может содержать '-'
             
-                type(self).gzip,                                # Утилиты компрессии доступны через import morpher
+                # type(self).gzip,                            # Утилиты компрессии доступны через import morpher
+                # DomHtml.brython(type(self).gzip)(),         # Эквивалент
+                type(self).gzip(),                            # Эквивалент если DomMorph.gzip отдекорирована через @DomHtml.brython
                 
                 type(self).morpher(MORPHROUTE=self.morphroute),
             )           
@@ -168,8 +170,7 @@ class DomMorph(DomHtml):
                         for c in beforeend:
                             yield 'beforeend', _cmp.id, cmp.id, c.outer()
 
-
-
+    @DomHtml.brython
     @staticmethod
     def gzip():
         """

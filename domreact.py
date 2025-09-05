@@ -31,7 +31,7 @@ class DomReact(DomMorph):
 
         self.head.add(
             Cmp('script', type="text/python", id='react')(    # XXX id это имя модуля доступного через import и не может содержать '-'
-                type(self).react,                             # Может быть перегружен в наследника как статический метод
+                type(self).react(),                           # Может быть перегружен в наследника как статический метод
             ),
             
             eventers := Cmp('script', type="text/python", id='eventers')  # Контейнер для всех скриптов DomReact.eventer()           
@@ -48,7 +48,7 @@ class DomReact(DomMorph):
 
 
 
-
+    @DomMorph.brython
     @staticmethod
     def react():
         """ Модуль извлечения информации о событии и отправки на сервер """
