@@ -54,7 +54,7 @@ class DomReact(DomMorph):
         """ Модуль извлечения информации о событии и отправки на сервер """
         # pylint: disable=E0401,W0611,W0612
         
-        from browser import document, window, aio;  # noqa
+        from browser import document, window, ajax;   # noqa
         from morpher import compress
 
         event_props_black_list = {
@@ -93,20 +93,17 @@ class DomReact(DomMorph):
 
             return result
 
-            
-        async def send_event(EVENTROUTE, ev):
-            data = await compress(repr(event_to_dict(ev)))
-            await aio.post(EVENTROUTE, data=data)
-                
 
+        def send_event(EVENTROUTE, ev):
+            compress(repr(event_to_dict(ev))).then( lambda data: ajax.post(EVENTROUTE, data=data) )
+            
 
     @DomMorph.brython
     @staticmethod
     def eventer(ID=None, EVENTTYPE='onload', EVENTROUTE="/"):
         """ Фронт-энд скрипт привязывающийся к компоненту единственное назначение которого - это слать событие на сервер """
-        from react import document, send_event, aio;  # pylint: disable=E0401
-        if (el := document.getElementById(str(ID))): el.addEventListener(EVENTTYPE, lambda ev: aio.run(send_event(EVENTROUTE, ev)))
-
+        from react import document, send_event;  # pylint: disable=E0401
+        if (el := document.getElementById(str(ID))): el.addEventListener(EVENTTYPE, lambda ev: send_event(EVENTROUTE, ev))
 
 
     def bind(self, cmp: Cmp, evtype, handler: "server-side"):  # pylint: disable=W0221

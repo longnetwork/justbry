@@ -6,7 +6,7 @@
 # pylint: disable=W0621,W0123,W0622
 
 
-import asyncio
+import asyncio, base64, gzip
 
 from copy import deepcopy
 
@@ -44,11 +44,11 @@ class DomMorph(DomHtml):
             
             Cmp('script', type="text/python", id='morpher')(    # XXX id это имя модуля доступного через import и не может содержать '-'
             
-                # type(self).gzip,                            # Утилиты компрессии доступны через import morpher
-                # DomHtml.brython(type(self).gzip)(),         # Эквивалент
-                type(self).gzip(),                            # Эквивалент если DomMorph.gzip отдекорирована через @DomHtml.brython
+                # type(self).gzip,                              # Утилиты компрессии доступны через import morpher
+                # DomHtml.brython(type(self).gzip)(),           # Эквивалент
+                type(self).gzip(),                              # Эквивалент если DomMorph.gzip отдекорирована через @DomHtml.brython
                 
-                type(self).morpher(MORPHROUTE=self.morphroute),
+                type(self).morpher(MORPHROUTE=self.morphroute),  # Может быть перегружен в наследника как статический метод
             )           
         )
 
@@ -181,24 +181,28 @@ class DomMorph(DomHtml):
         
         from browser import window
 
-        async def compress(s: str) -> bytes:
+        def compress(s: 'str string') -> "Promise of base64 string":             # 30% ~ 50%
             byteArray = window.TextEncoder.new().encode(s);           # utf-8
             cs = window.CompressionStream.new('gzip')
             writer = cs.writable.getWriter(); writer.write(byteArray); writer.close();
             reader = window.Response.new(cs.readable).arrayBuffer();  # Promise (awaitable)
 
-            return bytes(window.Uint8Array.new(await reader));        # 30% ~ 50%
+            return reader.then( lambda data:  # Промис с навешанной лямбдой
+                                window.btoa(window.String.fromCharCode.apply(None, window.Uint8Array.new(data))) )
 
-        async def decompress(b: bytes) -> str:
-            byteArray = window.Uint8Array.new(list(b))
+        def decompress(b: 'base64 string') -> "Promise of str string":
+            
+            byteArray = window.Uint8Array.new([ord(c) for c in window.atob(b)])
             cs = window.DecompressionStream.new('gzip')
             writer = cs.writable.getWriter(); writer.write(byteArray); writer.close();
             reader = window.Response.new(cs.readable).arrayBuffer()
 
-            return window.TextDecoder.new().decode(await reader)
+            return reader.then( lambda data:  # Промис с навешанной лямбдой
+                                window.TextDecoder.new().decode(data) )
+                                
+
 
             
-
     @DomHtml.brython
     @staticmethod
     def morpher(MORPHROUTE="/"):
@@ -224,12 +228,72 @@ class DomMorph(DomHtml):
         # pylint: disable=E0401,W0601,W0602
         
         from browser import console, document, window
+        from morpher import decompress
 
         websocket = window.WebSocket.new if hasattr(window, 'WebSocket') and window.WebSocket else None
 
         if websocket:  # WebSocket supported
             
-            ws = websocket(MORPHROUTE); morphhash = ''
+            ws = websocket(MORPHROUTE); morphhash = '';  # morphhash во фронт-энде в globals
+
+            def morphing(data):  # Морфинг DOM
+                global morphhash
+
+                if not morphhash: return
+
+                if isinstance(data, str): data = eval(data)
+
+                if not data: return
+                
+                for d in data:
+                    match d:
+                        case "outerHTML", _id, _, str(outerHTML) if _id is not None:  # outerHTML уже содержит новый id
+                            el = document.getElementById(str(_id))
+                            if el:
+                                el.outerHTML = outerHTML
+                        case "innerHTML", _id, id, str(innerHTML) if _id is not None:
+                            el = document.getElementById(str(_id))
+                            if el:
+                                el.innerHTML = innerHTML
+                                if id is not None and id != _id:
+                                    el.id = str(id)
+                        case "attrs", _id, id, dict(attrs) if _id is not None:
+                            el = document.getElementById(str(_id))
+                            if el:
+                                for k, v in list(el.attrs.items()):
+                                    if k == 'id': continue
+                                    if k not in attrs:
+                                        del el.attrs[k]
+                                for k, v in attrs.items():
+                                    if k in {'classes', '_class', 'class_', 'class', 'className'}:
+                                        el.attrs['class'] = v
+                                        continue
+                                    if isinstance(v, bool):
+                                        setattr(el, k, v)
+                                        continue
+                                    if isinstance(v, str):
+                                        el.attrs[k] = v
+                                        continue
+                                    el.attrs[k] = v
+                                if id is not None and id != _id:
+                                    el.id = str(id)
+                        case "remove", _id, _, _ if _id is not None:
+                            el = document.getElementById(str(_id))
+                            if el:
+                                el.remove()
+                        case "afterbegin", _id, id, str(outerHTML) if _id is not None:
+                            el = document.getElementById(str(_id))
+                            if el:
+                                el.insertAdjacentHTML('afterbegin', outerHTML)
+                                if id is not None and id != _id:
+                                    el.id = str(id)
+                        case "beforeend", _id, id, str(outerHTML) if _id is not None:
+                            el = document.getElementById(str(_id))
+                            if el:
+                                el.insertAdjacentHTML('beforeend', outerHTML)
+                                if id is not None and id != _id:
+                                    el.id = str(id)                
+
 
             def _open(ev):
                 global morphhash;  # Этот код при инжекции во фронт-энд попадает как глобальный код (без строки декларации функции)
@@ -253,64 +317,13 @@ class DomMorph(DomHtml):
                 try:                    
                     if ev.data == 'pong': return
                     
-                    if ev.data.isdigit(): return
-                    
-                    data = eval(ev.data)
-                    if data:  # Морфинг
-                        for d in data:
-                            match d:
-                                case "outerHTML", _id, _, str(outerHTML) if _id is not None:  # outerHTML уже содержит новый id
-                                    el = document.getElementById(str(_id))
-                                    if el:
-                                        el.outerHTML = outerHTML
-                                case "innerHTML", _id, id, str(innerHTML) if _id is not None:
-                                    el = document.getElementById(str(_id))
-                                    if el:
-                                        el.innerHTML = innerHTML
-                                        if id is not None and id != _id:
-                                            el.id = str(id)
-                                case "attrs", _id, id, dict(attrs) if _id is not None:
-                                    el = document.getElementById(str(_id))
-                                    if el:
-                                        for k, v in list(el.attrs.items()):
-                                            if k == 'id': continue
-                                            if k not in attrs:
-                                                del el.attrs[k]
-                                        for k, v in attrs.items():
-                                            if k in {'classes', '_class', 'class_', 'class', 'className'}:
-                                                el.attrs['class'] = v
-                                                continue
-                                            if isinstance(v, bool):
-                                                setattr(el, k, v)
-                                                continue
-                                            if isinstance(v, str):
-                                                el.attrs[k] = v
-                                                continue
-                                            el.attrs[k] = v
-                                        if id is not None and id != _id:
-                                            el.id = str(id)
-                                case "remove", _id, _, _ if _id is not None:
-                                    el = document.getElementById(str(_id))
-                                    if el:
-                                        el.remove()
-                                case "afterbegin", _id, id, str(outerHTML) if _id is not None:
-                                    el = document.getElementById(str(_id))
-                                    if el:
-                                        el.insertAdjacentHTML('afterbegin', outerHTML)
-                                        if id is not None and id != _id:
-                                            el.id = str(id)
-                                case "beforeend", _id, id, str(outerHTML) if _id is not None:
-                                    el = document.getElementById(str(_id))
-                                    if el:
-                                        el.insertAdjacentHTML('beforeend', outerHTML)
-                                        if id is not None and id != _id:
-                                            el.id = str(id)
-
+                    decompress(ev.data).then(morphing)
+                        
 
                 except Exception as e:
                     console.error(f"Dom Morphing: {e}")
 
-            
+        
             ws.bind('open', _open)
             ws.bind('close', _close)
             ws.bind('message', _message)
@@ -335,8 +348,8 @@ class DomMorph(DomHtml):
                 if body != _body:   # Есть изменения dom
                     
                     diffs = list(self.compare_dom(body, _body))
-                    if diffs:
-                        updates.append(socket.send_text(repr(diffs)))
+                    if diffs:                        
+                        updates.append(socket.send_text( base64.b64encode(gzip.compress(repr(diffs).encode())).decode() ))
                         _body = body
                     # morphhash менять нельзя, что работала очистка self.responses при закрытии сокета
                     self.morphsockets[socket] = (_body, morphhash)

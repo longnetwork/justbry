@@ -3,7 +3,7 @@
     Модуль justbry как надстройка над starlette и точка импорта системных классов
 """
 
-import re, weakref, gzip, inspect, logging
+import re, weakref, gzip, base64, inspect, logging
 from ast import literal_eval
 import asyncio
 
@@ -163,7 +163,10 @@ class ReactEndpoint(HTTPEndpoint):
             return Response(status_code=404);                         # Not Found 
             
         try:
-            data = gzip.decompress(await request.body())
+
+            request_body = await request.body();  # Строка base64 сжатых байт
+
+            data = gzip.decompress( base64.b64decode(request_body) )
 
             if (log := getLogger()): log.debug(f"event: {data}")
             

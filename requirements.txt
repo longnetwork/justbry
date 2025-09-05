@@ -1,5 +1,6 @@
 anyio==4.6.2.post1
 astroid==3.3.5
+brython==3.11.3
 certifi==2024.8.30
 charset-normalizer==3.4.0
 click==8.1.7
@@ -9,7 +10,7 @@ h11==0.14.0
 idna==3.10
 isort==5.13.2
 itsdangerous==2.2.0
--e git+https://github.com/longnetwork/justbry.git@16c8d6ccd1104bc83e233e7fb08445e44185ae2c#egg=justbry
+-e git+https://github.com/longnetwork/justbry.git@eefc51e8829a124579efa0c1dc38716685b30905#egg=justbry
 mccabe==0.7.0
 platformdirs==4.3.6
 pycodestyle==2.12.1
