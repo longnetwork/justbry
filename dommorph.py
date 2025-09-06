@@ -175,30 +175,42 @@ class DomMorph(DomHtml):
     def gzip():
         """
             Стандартные модули brython zlib/gzip работают очень медленно, поэтому используем нативное api браузера
-            ( https://gist.github.com/Explosion-Scratch/357c2eebd8254f8ea5548b0e6ac7a61b )"
+            ( базовые примеры: https://gist.github.com/Explosion-Scratch/357c2eebd8254f8ea5548b0e6ac7a61b )
         """
         # pylint: disable=E0401,W0612
-        
+
+
         from browser import window
+        
+        (String, TextEncoder, TextDecoder, 
+         CompressionStream, DecompressionStream,
+         Response, Uint8Array,
+         btoa, atob,
+         js_eval) = (window.String, window.TextEncoder, window.TextDecoder, 
+                     window.CompressionStream, window.DecompressionStream,
+                     window.Response, window.Uint8Array,
+                     window.btoa, window.atob,
+                     window.eval)
+
 
         def compress(s: 'str string') -> "Promise of base64 string":             # 30% ~ 50%
-            byteArray = window.TextEncoder.new().encode(s);           # utf-8
-            cs = window.CompressionStream.new('gzip')
+            byteArray = TextEncoder.new().encode(s);           # utf-8
+            cs = CompressionStream.new('gzip')
             writer = cs.writable.getWriter(); writer.write(byteArray); writer.close();
-            reader = window.Response.new(cs.readable).arrayBuffer();  # Promise (awaitable)
+            reader = Response.new(cs.readable).arrayBuffer();  # Promise (awaitable)
 
             return reader.then( lambda data:  # Промис с навешанной лямбдой
-                                window.btoa(window.String.fromCharCode.apply(None, window.Uint8Array.new(data))) )
+                                btoa(String.fromCharCode.apply(None, Uint8Array.new(data))) )
 
         def decompress(b: 'base64 string') -> "Promise of str string":
-            
-            byteArray = window.Uint8Array.new([ord(c) for c in window.atob(b)])
-            cs = window.DecompressionStream.new('gzip')
+            # byteArray = Uint8Array.new([ord(c) for c in atob(b)]);  # ord ~ charCodeAt(0)
+            byteArray = js_eval(f"Uint8Array.from(atob('{b}'), char => char.charCodeAt(0));");  # speed-up x6
+            cs = DecompressionStream.new('gzip')
             writer = cs.writable.getWriter(); writer.write(byteArray); writer.close();
-            reader = window.Response.new(cs.readable).arrayBuffer()
+            reader = Response.new(cs.readable).arrayBuffer()
 
             return reader.then( lambda data:  # Промис с навешанной лямбдой
-                                window.TextDecoder.new().decode(data) )
+                                TextDecoder.new().decode(data) )
                                 
 
 

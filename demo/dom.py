@@ -43,7 +43,19 @@ dom = DomHtml(
         helloworld2()
     ),
 
+
+    # ~ Cmp('div', id='interpreter_id', contenteditable=True, classes="content"),
+    
+    # ~ Cmp('script', type="text/python")("""
+        # ~ from interpreter import Interpreter
+        
+        # ~ Interpreter('interpreter_id', title="Brython", globals=None, locals=None, rows=30, cols=120, default_css=True)
+    # ~ """),
+
+    
     version = time.time(),  # В место этого может быть hash от всех значимых файлов в static/
+
+    
 )
 
 print(dom.render())

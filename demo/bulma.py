@@ -61,8 +61,7 @@ dom = DomHtml(
         
         "Lorem Ipsum", "Lorem Ipsum",
         Cmp('text', "Lorem Ipsum"), Cmp('text', "Lorem Ipsum"),
-    ),
-    
+    ),    
 )
 
 
