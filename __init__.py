@@ -157,7 +157,7 @@ class ReactEndpoint(HTTPEndpoint):
 
     doms = weakref.WeakValueDictionary();  # {str(id(dom)): dom, ...} Будет удерживаться пока есть в MorphEndpoint.doms
     
-    async def post(self, request):
+    async def put(self, request):
         dom =  self.doms.get(str(request.path_params.get('dom_id')))
         if not dom:
             return Response(status_code=404);                         # Not Found 

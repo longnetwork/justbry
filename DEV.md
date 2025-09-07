@@ -30,7 +30,7 @@ _(.venv)$_  `pip install requests`
 
 
 
-3) Чтобы запуск из исходников был таким-же как и после pip install justbry (импорт правильно разрешался)
+3) Чтобы запуск из исходников был таким-же как и после pip install justbry (импорт правильно разрешался):  
 _(.venv)$_  `pip install --editable .`  # https://setuptools.pypa.io/en/latest/userguide/development_mode.html  
 
 

@@ -95,7 +95,7 @@ class DomReact(DomMorph):
 
 
         def send_event(EVENTROUTE, ev):
-            compress(repr(event_to_dict(ev))).then( lambda data: ajax.post(EVENTROUTE, data=data) )
+            compress(repr(event_to_dict(ev))).then( lambda data: ajax.put(EVENTROUTE, data=data) )
             
 
     @DomMorph.brython

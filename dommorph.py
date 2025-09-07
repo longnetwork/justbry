@@ -176,6 +176,9 @@ class DomMorph(DomHtml):
         """
             Стандартные модули brython zlib/gzip работают очень медленно, поэтому используем нативное api браузера
             ( базовые примеры: https://gist.github.com/Explosion-Scratch/357c2eebd8254f8ea5548b0e6ac7a61b )
+
+            TODO: Когда появится фикс позволяющий отправлять bytes через browser.json, тогда слой
+                  кодирования base64 можно будет исключить
         """
         # pylint: disable=E0401,W0612
 
@@ -193,8 +196,8 @@ class DomMorph(DomHtml):
                      window.eval)
 
 
-        def compress(s: 'str string') -> "Promise of base64 string":             # 30% ~ 50%
-            byteArray = TextEncoder.new().encode(s);           # utf-8
+        def compress(s: 'str string') -> "Promise of base64 string":    # Сжимает примерно в два раза
+            byteArray = TextEncoder.new().encode(s);  # utf-8
             cs = CompressionStream.new('gzip')
             writer = cs.writable.getWriter(); writer.write(byteArray); writer.close();
             reader = Response.new(cs.readable).arrayBuffer();  # Promise (awaitable)
@@ -202,7 +205,7 @@ class DomMorph(DomHtml):
             return reader.then( lambda data:  # Промис с навешанной лямбдой
                                 btoa(String.fromCharCode.apply(None, Uint8Array.new(data))) )
 
-        def decompress(b: 'base64 string') -> "Promise of str string":
+        def decompress(b: 'base64 string') -> "Promise of str string":  # base64 увеличивает размер данных примерно на 33%
             # byteArray = Uint8Array.new([ord(c) for c in atob(b)]);  # ord ~ charCodeAt(0)
             byteArray = js_eval(f"Uint8Array.from(atob('{b}'), char => char.charCodeAt(0));");  # speed-up x6
             cs = DecompressionStream.new('gzip')

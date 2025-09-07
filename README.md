@@ -8,3 +8,4 @@ Python scripts into the frontend for Ajax, React, or anything else.
 `python -m uvicorn justbry.demo.react:app`  
 `python -m uvicorn justbry.demo.widget:app`  
 
+
