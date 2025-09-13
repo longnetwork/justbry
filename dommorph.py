@@ -179,6 +179,7 @@ class DomMorph(DomHtml):
 
             TODO: Когда появится фикс позволяющий отправлять bytes через browser.json, тогда слой
                   кодирования base64 можно будет исключить
+                  Уже появился!
         """
         # pylint: disable=E0401,W0612
 

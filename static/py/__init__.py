@@ -2,7 +2,7 @@
 # pylint: disable=E0401
 
 
-# import interpreter
+import interpreter
 
 import javascript
 

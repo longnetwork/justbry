@@ -36,7 +36,7 @@ dom = DomHtml(
     #   </div>
     # </div>
     
-    Cmp('div', data_theme="dark")(
+    Cmp('div', data_theme="dark")(    
         Cmp('h1', classes="title")("Bulma"),
         Cmp('p',  classes='subtitle')(
             "Modern CSS framework based on", Cmp('a', href="https://bulma.io")("JustBry")
@@ -60,8 +60,11 @@ dom = DomHtml(
         ),
         
         "Lorem Ipsum", "Lorem Ipsum",
-        Cmp('text', "Lorem Ipsum"), Cmp('text', "Lorem Ipsum"),
-    ),    
+        Cmp('text', "Lorem Ipsum"), Cmp('text', "Lorem Ipsum"),        
+    ),
+
+
+        
 )
 
 

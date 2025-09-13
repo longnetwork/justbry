@@ -23,6 +23,7 @@ def helloworld2(cnt=2):
 
 
 dom = DomHtml(
+
     " - Hello World - - Hello World - ",
     """
          - Hello World - 
@@ -43,18 +44,32 @@ dom = DomHtml(
         helloworld2()
     ),
 
-
-    # ~ Cmp('div', id='interpreter_id', contenteditable=True, classes="content"),
-    
-    # ~ Cmp('script', type="text/python")("""
-        # ~ from interpreter import Interpreter
-        
-        # ~ Interpreter('interpreter_id', title="Brython", globals=None, locals=None, rows=30, cols=120, default_css=True)
-    # ~ """),
-
     
     version = time.time(),  # В место этого может быть hash от всех значимых файлов в static/
+    
+)
 
+dom.body.add(  # Инжекция Brython-консоли
+    
+    Cmp('div', id='interpreter', contenteditable=True)(
+        Cmp('script', type="text/python")("""
+            from interpreter import Interpreter
+            Interpreter('interpreter', title="Brython", globals=None, locals=None, rows=30, cols=120, default_css=False)
+        """),
+    ),
+
+    Cmp('style')("""
+        #interpreter {
+            display: grid;
+            // margin: 1rem;
+            border: 3px solid #ccc;
+        }
+        #interpreter > pre {
+            padding: 0;
+            color: white;
+            background: black;
+        }
+    """),
     
 )
 
