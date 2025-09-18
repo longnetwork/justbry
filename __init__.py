@@ -8,13 +8,25 @@ from ast import literal_eval
 import asyncio
 
 from starlette.applications import Starlette
+
 from starlette.middleware import Middleware
+from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
+
 from starlette.staticfiles import StaticFiles as _StaticFiles
-from starlette.routing import Mount, Route, WebSocketRoute
-from starlette.responses import Response, HTMLResponse
-from starlette.endpoints import WebSocketEndpoint, HTTPEndpoint
+
+from starlette.routing import (
+    Mount, Route, WebSocketRoute,
+)
+
+from starlette.responses import (
+    Response, HTMLResponse,
+)
+
+from starlette.endpoints import (
+    WebSocketEndpoint, HTTPEndpoint,
+)
 
 from .utils import getLogger as _getLogger
 

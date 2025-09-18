@@ -242,9 +242,12 @@ class DomMorph(DomHtml):
             
         """
         # pylint: disable=E0401,W0601,W0602
+
+        from ast import literal_eval
         
         from browser import console, document, window
         from morpher import decompress
+        
 
         websocket = window.WebSocket.new if hasattr(window, 'WebSocket') and window.WebSocket else None
 
@@ -257,7 +260,7 @@ class DomMorph(DomHtml):
 
                 if not morphhash: return
 
-                if isinstance(data, str): data = eval(data)
+                if isinstance(data, str): data = literal_eval(data);  # До 2-х раз медленнее eval но безопасней
 
                 if not data: return
                 

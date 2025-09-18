@@ -50,7 +50,7 @@ async def homepage(request):
     print(dom.render())
 
     
-    return await dom.response(request)
+    return await dom.response()
 
 
 app = Justbry(
