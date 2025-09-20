@@ -282,7 +282,7 @@ class Cmp(Tag):
 
     __slots__ = [
         '__weakref__',
-        
+
         '_parent',
         '_childs',
     ]
@@ -489,8 +489,9 @@ class Cmp(Tag):
 
     def _get_dom(self):
         """
-            Комонент на вершине иерархии
+            Комонент на вершине иерархии. FIXME Можно кешировать поиск
         """
+        
         child = self; parent = child._parent
         
         while parent:  # parent всегда weak proxy если не None
@@ -502,6 +503,11 @@ class Cmp(Tag):
         dom = self._get_dom()
         if hasattr(dom, 'bind'):
             dom.bind(self, evtype, handler)
+
+    async def update(self):
+        dom = self._get_dom()
+        if hasattr(dom, 'update'):
+            await dom.update()
 
 
 class DomHtml(Cmp):
@@ -542,8 +548,8 @@ class DomHtml(Cmp):
                 Cmp('meta', name="viewport", content="width=device-width, initial-scale=1"),
 
                 Cmp('script', src = static + "brython.min.js" + (f"?v={version}" if version else "")),
-                # Cmp('script', src = static + "brython_stdlib.min.js" + (f"?v={version}" if version else "")),
-                Cmp('script', src = static + "brython_modules.js" + (f"?v={version}" if version else "")),
+                brylib := Cmp('script', src = static + "brython_stdlib.min.js" + (f"?v={version}" if version else "")),
+                # brylib := Cmp('script', src = static + "brython_modules.js" + (f"?v={version}" if version else "")),
 
                 Cmp('link', rel="stylesheet", href = static + "bulma.min.css" + (f"?v={version}" if version else "")),
                 Cmp('script', defer=True, src = static + "fontawesome_all.js" + (f"?v={version}" if version else "")),
@@ -581,7 +587,8 @@ class DomHtml(Cmp):
 
         if body_components:            
             self.body.add(*body_components)
-        
+
+        self.brylib = brylib
 
     class brython:
         """
