@@ -39,7 +39,7 @@ class DomReact(DomMorph):
 
         self.eventers = eventers
 
-        self.handlers = {};  # {target_id: [handler, ...]}
+        self.handlers = {};  # {target_id: [ (evtype, handler), ... ]}
 
 
     async def response(self, request=None):
@@ -117,7 +117,8 @@ class DomReact(DomMorph):
             type(self).eventer(cmp.id, evtype, self.reactroute)
         )
         handlers = self.handlers.setdefault(str(cmp.id), [])
-        handlers.append(handler)
+
+        handlers.append( (evtype, handler) )
 
 
 

@@ -7,6 +7,8 @@ import re, weakref, gzip, base64, inspect, logging
 from ast import literal_eval
 import asyncio
 
+import warnings
+
 from starlette.applications import Starlette
 
 from starlette.middleware import Middleware
@@ -188,19 +190,23 @@ class ReactEndpoint(HTTPEndpoint):
             handlers = dom.handlers.get(target_id)
             if not handlers: return Response(status_code=422);        # Unprocessable Entity 
 
+            event_type = event['type']
+
             exc = None
-            for handler in handlers:
-                try:
-                    # handler может быть обычной функцией, либо async-функцией, - тогда handler(event) создаст awaitable-объект
-                    # lambda возвращающая coroutine также допустима
-                    # XXX handlers исполняются в пределах одного dom в порядке назначения
-                    ret = handler(event)
-                    if asyncio.iscoroutine(ret):
-                        await ret
-                        
-                except Exception as e:
-                    if (log := getLogger()): log.exception(e)
-                    exc = e
+            for evtype, handler in handlers:                          # [ (evtype, handler), ... ]
+                if evtype == event_type:
+                    try:
+                        # handler может быть обычной функцией, либо async-функцией, - тогда handler(event) создаст awaitable-объект
+                        # lambda возвращающая coroutine также допустима
+                        # XXX handlers исполняются в пределах одного dom в порядке назначения
+                        # FIXME Подумать над оптимизациями распараллеливания запуска обработчиков
+                        ret = handler(event)
+                        if asyncio.iscoroutine(ret):
+                            await ret
+                            
+                    except Exception as e:
+                        if (log := getLogger()): log.exception(e)
+                        exc = e
                 
             if not exc:
                 return Response(status_code=202);                     # Accepted 
@@ -220,6 +226,7 @@ class Justbry(Starlette):
                  middleware=None,
                  exception_handlers=None,
                  on_startup=None, on_shutdown=None, lifespan=None):
+
 
         middleware = middleware or []
 
@@ -251,4 +258,53 @@ class Justbry(Starlette):
                          exception_handlers=exception_handlers,
                          on_startup=on_startup, on_shutdown=on_shutdown, lifespan=lifespan)
 
+
+    # Это перегруженные методы и декораторы Starlette app для автоматизации правильного порядка вставки маршрутов
     
+    def add_route(self, *args, **kwargs):
+        super().add_route(*args, **kwargs)
+        route = self.router.routes.pop(-1); self.router.routes.insert(0, route)
+        
+    def add_websocket_route(self, *args, **kwargs):
+        super().add_websocket_route(*args, **kwargs)
+        route = self.router.routes.pop(-1); self.router.routes.insert(0, route)
+
+    def route(self, path, methods = None, name = None, include_in_schema = True):
+        warnings.warn(
+            "The `route` decorator is deprecated, and will be removed in version 1.0.0. "
+            "Refer to https://www.starlette.io/routing/ for the recommended approach.",
+            DeprecationWarning,
+        )
+
+        def decorator(func):
+            self.add_route(
+                path,
+                func,
+                methods=methods,
+                name=name,
+                include_in_schema=include_in_schema,
+            )
+            return func
+
+        return decorator
+
+    def websocket_route(self, path, name = None):
+        warnings.warn(
+            "The `websocket_route` decorator is deprecated, and will be removed in version 1.0.0. "
+            "Refer to https://www.starlette.io/routing/#websocket-routing for the recommended approach.",
+            DeprecationWarning,
+        )
+
+        def decorator(func):
+            self.add_websocket_route(path, func, name=name)
+            return func
+
+        return decorator
+
+
+
+
+
+
+
+

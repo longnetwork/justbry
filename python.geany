@@ -24,16 +24,17 @@ long_line_column=72
 
 [files]
 current_page=0
-FILE_NAME_0=702;Python;0;EUTF-8;0;1;0;%2Fhome%2Fmint%2FWork%2Fjustbry%2Fdemo%2Fsess.py;0;4
-FILE_NAME_1=8937;Python;0;EUTF-8;0;1;0;%2Fhome%2Fmint%2FWork%2Fjustbry%2F__init__.py;0;4
-FILE_NAME_2=5506;Python;0;EUTF-8;0;1;0;%2Fhome%2Fmint%2FWork%2Fjustbry%2F.venv%2Flib%2Fpython3.11%2Fsite-packages%2Fstarlette%2Fapplications.py;0;4
-FILE_NAME_3=0;Python;0;EUTF-8;0;1;0;%2Fhome%2Fmint%2FWork%2Fjustbry%2Fdemo%2Fbulma.py;0;4
-FILE_NAME_4=981;Python;0;EUTF-8;0;1;0;%2Fhome%2Fmint%2FWork%2Fjustbry%2Fdemo%2Fdom.py;0;4
-FILE_NAME_5=1220;Python;0;EUTF-8;0;1;0;%2Fhome%2Fmint%2FWork%2Fjustbry%2Fstatic%2Fpy%2Faux.py;0;4
-FILE_NAME_6=10563;Python;0;EUTF-8;0;1;0;%2Fhome%2Fmint%2FWork%2Fjustbry%2Fdomhtml.py;0;4
-FILE_NAME_7=98;Python;0;EUTF-8;0;1;0;%2Fhome%2Fmint%2FWork%2Fjustbry%2Fdemo%2Fmorph.py;0;4
-FILE_NAME_8=1181;Python;0;EUTF-8;0;1;0;%2Fhome%2Fmint%2FWork%2Fjustbry%2Fdemo%2Freact.py;0;4
-FILE_NAME_9=0;Python;0;EUTF-8;0;1;0;%2Fhome%2Fmint%2FWork%2Fjustbry%2Fdomreact.py;0;4
+FILE_NAME_0=102;Python;0;EUTF-8;0;1;0;%2Fhome%2Fmint%2FWork%2Fjustbry%2Fdemo%2Fcorsess.py;0;4
+FILE_NAME_1=12684;Python;0;EUTF-8;0;1;0;%2Fhome%2Fmint%2FWork%2Fjustbry%2F__init__.py;0;4
+FILE_NAME_2=6732;Python;0;EUTF-8;0;1;0;%2Fhome%2Fmint%2FWork%2Fjustbry%2F.venv%2Flib64%2Fpython3.11%2Fsite-packages%2Fstarlette%2Fapplications.py;0;4
+FILE_NAME_3=1213;Python;0;EUTF-8;0;1;0;%2Fhome%2Fmint%2FWork%2Fjustbry%2Fdemo%2Freact.py;0;4
+FILE_NAME_4=31437;Python;0;EUTF-8;0;1;0;%2Fhome%2Fmint%2FWork%2Fjustbry%2F.venv%2Flib64%2Fpython3.11%2Fsite-packages%2Fstarlette%2Frouting.py;0;4
+FILE_NAME_5=17603;Python;0;EUTF-8;0;1;0;%2Fhome%2Fmint%2FWork%2Fjustbry%2Fdomhtml.py;0;4
+FILE_NAME_6=0;Python;0;EUTF-8;0;1;0;%2Fhome%2Fmint%2FWork%2Fjustbry%2F__main__.py;0;4
+FILE_NAME_7=1531;Python;0;EUTF-8;0;1;0;%2Fhome%2Fmint%2FWork%2Fjustbry%2Fdomreact.py;0;4
+FILE_NAME_8=433;Python;0;EUTF-8;0;1;0;%2Fhome%2Fmint%2FWork%2Fjustbry%2Fdemo%2Fwidget.py;0;4
+FILE_NAME_9=0;Python;0;EUTF-8;0;1;0;%2Fhome%2Fmint%2FWork%2Fjustbry%2Fdommorph.py;0;4
+FILE_NAME_10=483;Markdown;0;EUTF-8;0;1;0;%2Fhome%2Fmint%2FWork%2Fjustbry%2FREADME.md;0;4
 
 [VTE]
 last_dir=/home/mint/Work/justbry/demo
