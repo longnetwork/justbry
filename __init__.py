@@ -23,7 +23,7 @@ from starlette.routing import (
 )
 
 from starlette.responses import (
-    Response, HTMLResponse, RedirectResponse,
+    Response, HTMLResponse, RedirectResponse, PlainTextResponse,
 )
 
 from starlette.endpoints import (
