@@ -74,7 +74,7 @@ class DomMorph(DomHtml):
 
         """
         self.morphendpoint.doms[self.dom_id] = self
-                
+
         async with self.alock:
 
             body = deepcopy(self.body); morphhash = hash(body)
@@ -326,10 +326,11 @@ class DomMorph(DomHtml):
 
             def _close(_ev):
                 global morphhash
-    
+                
                 console.warn(f"Morpher Close: {morphhash=}")
 
-                window.location.reload()
+                if morphhash:
+                    window.location.reload()
 
             def _message(ev):
                 console.debug(f"Dom Morphing: {ev.data}")
@@ -346,7 +347,10 @@ class DomMorph(DomHtml):
             ws.bind('open', _open)
             ws.bind('close', _close)
             ws.bind('message', _message)
-                        
+
+            # Это необходимо что бы закрытие сокета шло до того как пойдет новый запрос при обновлении страницы
+            window.addEventListener('beforeunload', lambda ev: ws.close())
+
 
         else:
             console.error("Web Sockets are not supported")

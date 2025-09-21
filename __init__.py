@@ -143,6 +143,7 @@ class MorphEndpoint(WebSocketEndpoint):
                                                                       
 
     async def on_disconnect(self, websocket, close_code):
+        
         dom_id = str(websocket.path_params.get('dom_id'))
         dom =  self.doms.get(dom_id)
         if not dom:
@@ -150,6 +151,7 @@ class MorphEndpoint(WebSocketEndpoint):
             return
             
         async with dom.alock:
+            
             _, morphhash = dom.morphsockets.pop(websocket, (None, None))
 
             # if close_code == 1001:

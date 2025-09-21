@@ -6,10 +6,11 @@ import random, string
 
 from justbry import Justbry, Middleware, CORSMiddleware, SessionMiddleware
 from justbry.domhtml import DomHtml, Cmp
-
+# from justbry.domreact import DomReact, Cmp
 
 
 dom = DomHtml(
+# dom = DomReact(
     container := Cmp('div')(
     
         info := Cmp('text'),
