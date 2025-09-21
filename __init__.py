@@ -171,7 +171,7 @@ class ReactEndpoint(HTTPEndpoint):
 
     doms = weakref.WeakValueDictionary();  # {str(id(dom)): dom, ...} Будет удерживаться пока есть в MorphEndpoint.doms
     
-    async def put(self, request):
+    async def post(self, request):  # XXX put не безопасный для CORS
         dom =  self.doms.get(str(request.path_params.get('dom_id')))
         if not dom:
             return Response(status_code=404);                         # Not Found 
@@ -199,7 +199,8 @@ class ReactEndpoint(HTTPEndpoint):
                         # handler может быть обычной функцией, либо async-функцией, - тогда handler(event) создаст awaitable-объект
                         # lambda возвращающая coroutine также допустима
                         # XXX handlers исполняются в пределах одного dom в порядке назначения
-                        # FIXME Подумать над оптимизациями распараллеливания запуска обработчиков
+                        # FIXME Подумать над оптимизациями связанными с назначениями многих ReactEndpoint вместо одного на всех
+                        #       
                         ret = handler(event)
                         if asyncio.iscoroutine(ret):
                             await ret

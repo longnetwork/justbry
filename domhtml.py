@@ -489,13 +489,17 @@ class Cmp(Tag):
 
     def _get_dom(self):
         """
-            Комонент на вершине иерархии. FIXME Можно кешировать поиск
+            Комонент на вершине иерархии.
+            FIXME Можно кешировать поиск, но лучшая практика обновлять dom накопительным итогом в не покомпонентно
         """
         
         child = self; parent = child._parent
-        
-        while parent:  # parent всегда weak proxy если не None
-            child = parent(); parent = child._parent
+
+        try:
+            while parent:  # parent всегда weak proxy если не None
+                child = parent(); parent = child._parent
+        except ReferenceError:
+            pass
             
         return child
         
