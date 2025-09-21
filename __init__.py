@@ -62,6 +62,7 @@ class StaticFiles(_StaticFiles):
         Добавляет в поиск пакетный static (static по умолчанию)
     """
     staticroute = "/"
+    name = "static"
     
     def __init__(self, *, directory=None, packages=None, html=False, check_dir=True, follow_symlink=False):
         packages = packages or []
@@ -238,7 +239,7 @@ class Justbry(Starlette):
         routes = routes or []
         
         if not any(isinstance(r, Mount) and isinstance(r.app, StaticFiles) for r in routes):
-            routes.append(Mount(StaticFiles.staticroute, StaticFiles(), name="static"))
+            routes.append(Mount(StaticFiles.staticroute, StaticFiles(), name=StaticFiles.name))
 
 
         if not any(isinstance(r, WebSocketRoute) and inspect.isclass(r.app) and issubclass(r.app, MorphEndpoint) for r in routes):
