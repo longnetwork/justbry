@@ -238,7 +238,7 @@ class Justbry(Starlette):
         routes = routes or []
         
         if not any(isinstance(r, Mount) and isinstance(r.app, StaticFiles) for r in routes):
-            routes.append(Mount(StaticFiles.staticroute, StaticFiles()))
+            routes.append(Mount(StaticFiles.staticroute, StaticFiles(), name="static"))
 
 
         if not any(isinstance(r, WebSocketRoute) and inspect.isclass(r.app) and issubclass(r.app, MorphEndpoint) for r in routes):
