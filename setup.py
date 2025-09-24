@@ -30,6 +30,7 @@ setup(
     install_requires=[
         'uvicorn>=0.32',
         'starlette>=0.41',
+        'python-multipart>=0.0.20',
         'websockets>=14.1',
         'requests>=2.32',
         'itsdangerous>=2.2.0',

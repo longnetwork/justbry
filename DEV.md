@@ -19,7 +19,7 @@ _(.venv)$_  `deactivate`
 3) Пакетные зависимости:  
 
 _(.venv)$_  `pip install uvicorn`  
-_(.venv)$_  `pip install starlette`  
+_(.venv)$_  `pip install starlette python-multipart`  
 _(.venv)$_  `pip install websockets`  
 _(.venv)$_  `pip install itsdangerous`  
 _(.venv)$_  `pip install requests`  

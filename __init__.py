@@ -189,6 +189,7 @@ class ReactEndpoint(HTTPEndpoint):
             if (log := getLogger()): log.debug(f"event: {data}")
             
             event = literal_eval(data.decode('utf-8'))
+
             target_id = str(event['target']['id'])
 
             handlers = dom.handlers.get(target_id)

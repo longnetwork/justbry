@@ -57,7 +57,7 @@ class DomReact(DomMorph):
         from browser import document, window, ajax;   # noqa
         from morpher import compress
 
-        event_props_black_list = {
+        event_props_black_list = {  # FIXME Определиться с полным списком не нужного
             'baseURI',
             'namespaceURI',
             'innerHTML',
@@ -66,31 +66,54 @@ class DomReact(DomMorph):
             'outerText',
             'textContent',
             'formAction',
+            'action',
             'valueAsNumber',
+            
+            'enctype',
+            'encoding',
+            'method',
         }
-        
+
+        event_props_while_list = {
+            'elements',  # HTMLFormControlsCollection
+        }
+
+        def _event_props_to_dict(el):
+            res = {}
+            for k in el.__dict__:
+                if k.isupper(): continue
+                if k in event_props_black_list: continue
+                v = getattr(el, k, None)
+                if not isinstance(v, (str, bool, int, float)): continue
+                if v:
+                    res[k] = v
+                    
+            return res
+
         def event_to_dict(ev):
             tt = ev.target
             
             result = {}
-            
-            for k in dir(ev):
-                if k in event_props_black_list: continue
-                if isinstance(k, str) and k.isupper(): continue
-                v = getattr(ev, k, None)
-                if not isinstance(v, (str, bool, int, float)): continue
-                
-                result[k] = v
-            
-            target = result['target'] = {}
-            for k in dir(tt):
-                if k in event_props_black_list: continue
-                if isinstance(k, str) and k.isupper(): continue
-                v = getattr(tt, k, None)
-                if not isinstance(v, (str, bool, int, float)): continue
-                
-                target[k] = v
 
+            result.update(_event_props_to_dict(ev))
+
+            target = result['target'] = {}
+
+            target.update(_event_props_to_dict(tt))
+
+            for k in event_props_while_list:
+                v = getattr(tt, k, None)
+                if isinstance(v, (str, bool, int, float)):
+                    if v:
+                        target[k] = v
+                else:
+                    try:
+                        elements = list(v);  # Список контролов в form с текущими values
+                        if elements:
+                            target[k] = [ _event_props_to_dict(el) for el in elements]
+                    except:
+                        pass
+                
             return result
 
 
@@ -103,7 +126,8 @@ class DomReact(DomMorph):
     def eventer(ID=None, EVENTTYPE='onload', EVENTROUTE="/"):
         """ Фронт-энд скрипт привязывающийся к компоненту единственное назначение которого - это слать событие на сервер """
         from react import document, send_event;  # pylint: disable=E0401
-        if (el := document.getElementById(str(ID))): el.addEventListener(EVENTTYPE, lambda ev: send_event(EVENTROUTE, ev))
+        if (el := document.getElementById(str(ID))):
+            el.addEventListener(EVENTTYPE, lambda ev, id=str(ID): send_event(EVENTROUTE, ev) if ev.target.id == id else None)
 
 
     def bind(self, cmp: Cmp, evtype, handler: "server-side"):  # pylint: disable=W0221

@@ -5,17 +5,34 @@ import random, string
 
 
 from justbry import Justbry, Middleware, CORSMiddleware, SessionMiddleware
-from justbry.domhtml import DomHtml, Cmp
-# from justbry.domreact import DomReact, Cmp
+from justbry.domreact import DomReact, Cmp
 
 
-dom = DomHtml(
-# dom = DomReact(
+dom = DomReact(
     container := Cmp('div')(
     
         info := Cmp('text'),
     ),
+
+    # onsubmit="return false;" предотвращает авто-перезагрузку браузером страницы после submit
+    # form := Cmp('form', onsubmit="return false;")(
+    form := Cmp('form')(
+        Cmp('input', type="text", name="login", value="login"),
+        Cmp('input', type="text", name="password", value="password"),
+
+        # Браузеры после события submit автоматически перезагружают текущую страницу
+        Cmp('input', type="submit", name="submit", value="submit"),  
+    ),
 )
+
+
+async def submit(ev):
+    info.attrs.literal = str(ev)
+    await dom.update()
+
+form.bind('submit', submit)
+
+
 
 app = Justbry(
     debug = True,
@@ -28,8 +45,10 @@ app = Justbry(
 )
 
 
+# XXX Порядок маршрутов может иметь значение
+
 @app.route('/')
-async def homepage(request):
+async def home(request):
 
     if 'id' not in request.session:
         request.session['id'] = ''.join(random.choice(string.ascii_letters) for i in range(16))
@@ -37,6 +56,13 @@ async def homepage(request):
     info.attrs.literal = "session_id: " + request.session['id']
     
     return await dom.response()
+
+
+
+print(f"Routes: {app.routes}")
+
+
+
 
 
 

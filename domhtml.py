@@ -508,10 +508,10 @@ class Cmp(Tag):
         if hasattr(dom, 'bind'):
             dom.bind(self, evtype, handler)
 
-    async def update(self):
-        dom = self._get_dom()
-        if hasattr(dom, 'update'):
-            await dom.update()
+# ~     async def update(self):
+# ~         dom = self._get_dom()
+# ~         if hasattr(dom, 'update'):
+# ~             await dom.update()
 
 
 class DomHtml(Cmp):

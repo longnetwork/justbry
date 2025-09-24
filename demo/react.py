@@ -24,11 +24,22 @@ async def homepage(request):
                         )
                     )
                 ),
-                
+                Cmp('div', classes="cell")(inp := Cmp('input', type="input", classes="input", placeholder="Text")),
             ),
+
+            Cmp('div', classes="box")(
+                # onsubmit="return false;" предотвращает авто-перезагрузку браузером страницы после submit
+                frm := Cmp('form', onsubmit="return false;")(
+                    Cmp('div', classes="field")(Cmp('input', type="input", classes="input", name="login")),
+                    Cmp('div', classes="field")(Cmp('input', type="input", classes="input", name="passw")),
+                    Cmp('div', classes="control")(Cmp('input', type="submit", classes="button", name="submit")),
+                )
+            ),
+            
             Cmp('textarea', classes="textarea", readonly=True, rows="20",)(
                 info := Cmp('text')
             )
+            
         )
     )
 
@@ -45,7 +56,12 @@ async def homepage(request):
     anh.bind('click', update_info)
     chk.bind('click', update_info)
     sel.bind('click', update_info)
+
+    inp.bind('input', update_info)
     
+    frm.bind('mouseover', update_info)
+    
+    frm.bind('submit', update_info)
 
     print(dom.render())
 
