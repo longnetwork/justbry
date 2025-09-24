@@ -57,7 +57,8 @@ class DomReact(DomMorph):
         from browser import document, window, ajax;   # noqa
         from morpher import compress
 
-        event_props_black_list = {  # FIXME Определиться с полным списком не нужного
+        event_props_black_list = {
+            # FIXME Определиться с полным списком не нужного
             'baseURI',
             'namespaceURI',
             'innerHTML',
@@ -72,47 +73,41 @@ class DomReact(DomMorph):
             'enctype',
             'encoding',
             'method',
+
+            'className',
         }
 
         event_props_while_list = {
             'elements',  # HTMLFormControlsCollection
         }
-
+        
         def _event_props_to_dict(el):
             res = {}
             for k in el.__dict__:
                 if k.isupper(): continue
                 if k in event_props_black_list: continue
                 v = getattr(el, k, None)
-                if not isinstance(v, (str, bool, int, float)): continue
-                if v:
-                    res[k] = v
-                    
+                
+                # Оптимизация (пустое не шлем)
+                
+                if isinstance(v, (str, bool, int, float)):
+                    if v: res[k] = v
+                elif k in event_props_while_list:
+                    try:
+                        controls = list(v);  # Итерируемый объект
+                        if controls:
+                            res[k] = [ _event_props_to_dict(cl) for cl in controls]
+                    except:
+                        pass
             return res
 
         def event_to_dict(ev):
             tt = ev.target
             
             result = {}
-
             result.update(_event_props_to_dict(ev))
-
             target = result['target'] = {}
-
             target.update(_event_props_to_dict(tt))
-
-            for k in event_props_while_list:
-                v = getattr(tt, k, None)
-                if isinstance(v, (str, bool, int, float)):
-                    if v:
-                        target[k] = v
-                else:
-                    try:
-                        elements = list(v);  # Список контролов в form с текущими values
-                        if elements:
-                            target[k] = [ _event_props_to_dict(el) for el in elements]
-                    except:
-                        pass
                 
             return result
 
