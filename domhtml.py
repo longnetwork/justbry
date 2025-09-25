@@ -551,6 +551,8 @@ class DomHtml(Cmp):
                 Cmp('meta', charset="utf-8"),
                 Cmp('meta', name="viewport", content="width=device-width, initial-scale=1"),
 
+                Cmp('meta', name="version", content=f"{version}" if version else ""),
+
                 Cmp('script', src = static + "brython.min.js" + (f"?v={version}" if version else "")),
                 brylib := Cmp('script', src = static + "brython_stdlib.min.js" + (f"?v={version}" if version else "")),
                 # brylib := Cmp('script', src = static + "brython_modules.js" + (f"?v={version}" if version else "")),
