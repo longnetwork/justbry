@@ -329,7 +329,8 @@ class DomMorph(DomHtml):
                 
                 console.warn(f"Morpher Close: {morphhash=}")
 
-                if morphhash:
+                # if morphhash:
+                if True:
                     window.location.reload()
 
             def _message(ev):
