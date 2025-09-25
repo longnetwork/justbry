@@ -331,7 +331,8 @@ class DomMorph(DomHtml):
 
                 if morphhash:
                     # window.location.reload(True)
-                    window.location.assign(window.location.href)
+                    # window.location.assign(window.location.href)
+                    window.location.replace(window.location.href)
 
             def _message(ev):
                 console.debug(f"Dom Morphing: {ev.data}")
