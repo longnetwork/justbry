@@ -77,6 +77,6 @@ app = Justbry(
 )
 
 
-
+print(f"Routes: {app.routes}")
 
 

@@ -269,11 +269,11 @@ class Justbry(Starlette):
     
     def add_route(self, *args, **kwargs):
         super().add_route(*args, **kwargs)
-        route = self.router.routes.pop(-1); self.router.routes.insert(0, route)
+        route = self.router.routes.pop(-1); self.router.routes.insert(2, route)
         
     def add_websocket_route(self, *args, **kwargs):
         super().add_websocket_route(*args, **kwargs)
-        route = self.router.routes.pop(-1); self.router.routes.insert(0, route)
+        route = self.router.routes.pop(-1); self.router.routes.insert(2, route)
 
     def route(self, path, methods = None, name = None, include_in_schema = True):
         warnings.warn(
