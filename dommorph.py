@@ -349,8 +349,8 @@ class DomMorph(DomHtml):
             ws.bind('message', _message)
 
             # Это необходимо что бы закрытие сокета шло до того как пойдет новый запрос при обновлении страницы
-            window.addEventListener('beforeunload', lambda ev: ws.close())
-
+            # (Chromium подглючивает на этом месте: https://issues.chromium.org/issues/40839988)
+            window.addEventListener('beforeunload', lambda ev: ws.close() if ws.readyState == window.WebSocket.OPEN else None)
 
         else:
             console.error("Web Sockets are not supported")
