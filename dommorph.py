@@ -330,7 +330,8 @@ class DomMorph(DomHtml):
                 console.warn(f"Morpher Close: {morphhash=}")
 
                 if morphhash:
-                    window.location.reload()
+                    # window.location.reload(True)
+                    window.location.assign(window.location.href)
 
             def _message(ev):
                 console.debug(f"Dom Morphing: {ev.data}")
