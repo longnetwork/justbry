@@ -514,6 +514,16 @@ class Cmp(Tag):
 # ~             await dom.update()
 
 
+    @property
+    def parent(self):
+        return self._parent
+
+    @property
+    def childs(self):
+        return self._childs
+
+
+
 class DomHtml(Cmp):
     """
         Базовый шаблон документа (всей страницы)
