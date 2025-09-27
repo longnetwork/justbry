@@ -4,7 +4,7 @@
 import random, string
 
 
-from justbry import Justbry, Middleware, CORSMiddleware, SessionMiddleware
+from justbry import Justbry, Middleware, CORSMiddleware, SessionMiddleware, RedirectResponse
 from justbry.domreact import DomReact, Cmp
 
 
@@ -40,7 +40,11 @@ app = Justbry(
     middleware = [
         # XXX allow_credentials=True не совместим с allow_origins=["*"].
         # Если allow_credentials=True (кукисы и заголовки аутентификации разрешены), то нужно явно указать разрешенные домены
-        Middleware(CORSMiddleware, allow_origins=["127.0.0.1:8000"], allow_credentials=True, allow_methods=["GET", "POST"]),  
+        Middleware(CORSMiddleware,
+                   allow_origins=["http://127.0.0.1", "https://127.0.0.1"],
+                   allow_credentials=True,
+                   allow_methods=["*"],
+                   allow_headers=["*"]),  
                    
         Middleware(SessionMiddleware, secret_key=..., max_age=60 * 60 * 24 * 365, same_site='lax', https_only=False),  # max_age=None - до закрытия браузера
     ],
@@ -50,7 +54,12 @@ app = Justbry(
 # XXX Порядок маршрутов может иметь значение
 
 @app.route('/')
-async def home(request):
+async def web(request):
+
+    return RedirectResponse("/page")
+
+@app.route('/page')
+async def page(request):
 
     if 'id' not in request.session:
         request.session['id'] = ''.join(random.choice(string.ascii_letters) for i in range(16))
