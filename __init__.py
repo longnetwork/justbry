@@ -12,17 +12,22 @@ import warnings
 from starlette.applications import Starlette
 
 from starlette.middleware import Middleware
-from starlette.middleware.cors import CORSMiddleware;         # noqa
-from starlette.middleware.sessions import SessionMiddleware;  # noqa
+from starlette.middleware.cors import CORSMiddleware;                      # noqa
+from starlette.middleware.sessions import SessionMiddleware;               # noqa
 from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.middleware.authentication import AuthenticationMiddleware;  # noqa
+
+from starlette.authentication import (                                     # noqa
+    AuthCredentials, AuthenticationBackend, AuthenticationError, SimpleUser,
+)
 
 from starlette.staticfiles import StaticFiles as _StaticFiles
 
-from starlette.routing import (                               # noqa
+from starlette.routing import (                                            # noqa
     Route, WebSocketRoute, Mount, Host,
 )
 
-from starlette.responses import (                             # noqa
+from starlette.responses import (                                          # noqa
     Response, HTMLResponse, PlainTextResponse, JSONResponse, RedirectResponse,
     StreamingResponse, FileResponse, 
 )
@@ -30,6 +35,9 @@ from starlette.responses import (                             # noqa
 from starlette.endpoints import (
     HTTPEndpoint, WebSocketEndpoint, 
 )
+
+from starlette.background import BackgroundTask, BackgroundTasks;          # noqa
+
 
 from .utils import getLogger as _getLogger
 
