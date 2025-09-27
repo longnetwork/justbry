@@ -15,8 +15,8 @@ dom = DomReact(
     ),
 
     # onsubmit="return false;" предотвращает авто-перезагрузку браузером страницы после submit
-    # form := Cmp('form', onsubmit="return false;")(
-    form := Cmp('form')(
+    form := Cmp('form', onsubmit="return false;")(
+    # form := Cmp('form')(
         Cmp('input', type="text", name="login", value="login"),
         Cmp('input', type="text", name="password", value="password"),
 
@@ -38,7 +38,7 @@ app = Justbry(
     debug = True,
 
     middleware = [
-        Middleware(CORSMiddleware, allow_origins=["127.0.0.1:8000/"], allow_credentials=False),
+        Middleware(CORSMiddleware, allow_origins=["127.0.0.1:8000"], allow_credentials=True),  # allow_credentials=True не совместим с allow_origins=["*"]
                    
         Middleware(SessionMiddleware, secret_key=..., max_age=60 * 60 * 24 * 365, same_site='lax', https_only=False),  # max_age=None - до закрытия браузера
     ],
