@@ -38,7 +38,9 @@ app = Justbry(
     debug = True,
 
     middleware = [
-        Middleware(CORSMiddleware, allow_origins=["127.0.0.1:8000"], allow_credentials=True),  # allow_credentials=True не совместим с allow_origins=["*"]
+        # XXX allow_credentials=True не совместим с allow_origins=["*"].
+        # Если allow_credentials=True (кукисы и заголовки аутентификации разрешены), то нужно явно указать разрешенные домены
+        Middleware(CORSMiddleware, allow_origins=["127.0.0.1:8000"], allow_credentials=True, allow_methods=["GET", "POST"]),  
                    
         Middleware(SessionMiddleware, secret_key=..., max_age=60 * 60 * 24 * 365, same_site='lax', https_only=False),  # max_age=None - до закрытия браузера
     ],
