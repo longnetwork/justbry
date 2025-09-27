@@ -335,7 +335,7 @@ class DomMorph(DomHtml):
                     window.location.replace(window.location.href)
 
             def _message(ev):
-                console.debug(f"Dom Morphing: {ev.data}")
+                console.debug(f"Dom Morphing size: {len(ev.data)} bytes")
                 try:                    
                     if ev.data == 'pong': return
                     

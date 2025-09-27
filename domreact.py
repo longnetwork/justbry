@@ -54,7 +54,7 @@ class DomReact(DomMorph):
         """ Модуль извлечения информации о событии и отправки на сервер """
         # pylint: disable=E0401,W0611,W0612
         
-        from browser import document, window, ajax;   # noqa
+        from browser import document, window, ajax, console;   # noqa
         from morpher import compress
 
         event_props_black_list = {
@@ -113,6 +113,7 @@ class DomReact(DomMorph):
 
 
         def send_event(EVENTROUTE, ev):
+            console.debug(f"Send Event `{ev.type}` to: {EVENTROUTE}")
             compress(repr(event_to_dict(ev))).then( lambda data: ajax.post(EVENTROUTE, data=data) )
             
 
