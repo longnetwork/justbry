@@ -15,8 +15,8 @@ dom = DomReact(
     ),
 
     # onsubmit="return false;" предотвращает авто-перезагрузку браузером страницы после submit
-    form := Cmp('form', onsubmit="return false;")(
     # form := Cmp('form')(
+    form := Cmp('form', onsubmit="return false;")(
         Cmp('input', type="text", name="login", value="login"),
         Cmp('input', type="text", name="password", value="password"),
 
