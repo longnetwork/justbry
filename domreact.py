@@ -118,8 +118,8 @@ class DomReact(DomMorph):
 
 
         # FIXME при рестарте uvicorn часто первый post-запрос по EVENTROUTE блокируется на протокольном уровне.
-        #       Поэтому делаем начальный пинг (Символа "_" нету в base64)
-        ajax.post(EVENTROUTE, data="_ping_");  
+        #       Поэтому делаем начальный пинг (для принятия текущих заголовков)
+        ajax.post(EVENTROUTE, data="_ping_");  # Символа "_" нету в base64
         
             
 
