@@ -37,6 +37,8 @@
 
 import itertools, inspect, textwrap as tw, weakref
 
+from functools import lru_cache
+
 
 from . import HTMLResponse
 
@@ -272,7 +274,7 @@ class Cmp(Tag):
         __hash__ и __eq__ исходя из того что тэги задаются статически и их рендер сразу определяется
         в конструкторах Tag (то есть нам нужна только быстрая композиция хешей по дереву dom)
 
-        XXX `id` в систему сравнений хешей не входит (`name` - входит)
+        XXX `id` в систему сравнений хешей ВХОДИТ (у текстовых нод нету `id`)
 
         XXX Ссылка на parent в childs утилитарная и слабая
 
@@ -487,10 +489,11 @@ class Cmp(Tag):
         return result
         
 
+    @lru_cache()
     def _get_dom(self):
         """
             Комонент на вершине иерархии.
-            FIXME Можно кешировать поиск, но лучшая практика обновлять dom накопительным итогом в не покомпонентно
+            Можно кешировать поиск, но лучшая практика обновлять dom накопительным итогом в не покомпонентно
         """
         
         child = self; parent = child._parent
@@ -508,10 +511,10 @@ class Cmp(Tag):
         if hasattr(dom, 'bind'):
             dom.bind(self, evtype, handler)
 
-# ~     async def update(self):
-# ~         dom = self._get_dom()
-# ~         if hasattr(dom, 'update'):
-# ~             await dom.update()
+    async def update(self):
+        dom = self._get_dom()
+        if hasattr(dom, 'update'):
+            await dom.update()
 
 
     @property

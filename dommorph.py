@@ -376,7 +376,7 @@ class DomMorph(DomHtml):
                     if diffs:                        
                         updates.append(socket.send_text( base64.b64encode(gzip.compress(repr(diffs).encode())).decode() ))
                         _body = body
-                    # morphhash менять нельзя, что работала очистка self.responses при закрытии сокета
+                    # morphhash менять нельзя, чтобы работала очистка self.responses при закрытии сокета
                     self.morphsockets[socket] = (_body, morphhash)
 
             if updates:
