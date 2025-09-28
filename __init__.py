@@ -124,8 +124,8 @@ class MorphEndpoint(WebSocketEndpoint):
             await websocket.close(1008, "unknown dom_id")
                 
     async def on_receive(self, websocket, data):
-        if data == 'ping':
-            await websocket.send_text('pong');                        # Это преимущественно исходящий сокет
+        if data == '_ping_':
+            await websocket.send_text('_pong_');                        # Это преимущественно исходящий сокет
             return
 
         if not isinstance(data, str):
@@ -144,7 +144,7 @@ class MorphEndpoint(WebSocketEndpoint):
                     body = dom.responses[morphhash][0]
                     dom.morphsockets[websocket] = (body, morphhash);  # Теперь dom может сам себя обновлять на стороне браузера
                     
-                    # await websocket.send_text(data);                # pong
+                    # await websocket.send_text(data);                # _pong_
                     return
 
         await websocket.close(1008, "unknown morphhash")
@@ -191,6 +191,10 @@ class ReactEndpoint(HTTPEndpoint):
         try:
 
             request_body = await request.body();  # Строка base64 сжатых байт
+
+            if request_body == b'_ping_':
+                return Response(status_code=202)
+
 
             data = gzip.decompress( base64.b64decode(request_body) )
 

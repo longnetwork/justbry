@@ -30,8 +30,8 @@ class DomReact(DomMorph):
 
 
         self.head.add(
-            Cmp('script', type="text/python", id='react')(    # XXX id это имя модуля доступного через import и не может содержать '-'
-                type(self).react(),                           # Может быть перегружен в наследника как статический метод
+            Cmp('script', type="text/python", id='react')(     # XXX id это имя модуля доступного через import и не может содержать '-'
+                type(self).react(EVENTROUTE=self.reactroute),  # Может быть перегружен в наследника как статический метод
             ),
             
             eventers := Cmp('script', type="text/python", id='eventers')  # Контейнер для всех скриптов DomReact.eventer()           
@@ -50,7 +50,7 @@ class DomReact(DomMorph):
 
     @DomMorph.brython
     @staticmethod
-    def react():
+    def react(EVENTROUTE="/"):
         """ Модуль извлечения информации о событии и отправки на сервер """
         # pylint: disable=E0401,W0611,W0612
         
@@ -112,18 +112,23 @@ class DomReact(DomMorph):
             return result
 
 
-        def send_event(EVENTROUTE, ev):
+        def send_event(ev):
             console.debug(f"Send Event `{ev.type}` to: {EVENTROUTE}")
             compress(repr(event_to_dict(ev))).then( lambda data: ajax.post(EVENTROUTE, data=data) )
+
+
+        # FIXME при рестарте uvicorn часто первый post-запрос по EVENTROUTE блокируется на протокольном уровне.
+        #       Поэтому делаем начальный пинг (Символа "_" нету в base64)
+        ajax.post(EVENTROUTE, data="_ping_");  
+        
             
 
     @DomMorph.brython
     @staticmethod
-    def eventer(ID=None, EVENTTYPE='onload', EVENTROUTE="/"):
+    def eventer(ID=None, EVENTTYPE='onload'):
         """ Фронт-энд скрипт привязывающийся к компоненту единственное назначение которого - это слать событие на сервер """
         from react import document, send_event;  # pylint: disable=E0401
-        if (el := document.getElementById(str(ID))):
-            el.addEventListener(EVENTTYPE, lambda ev, id=str(ID): send_event(EVENTROUTE, ev) if ev.target.id == id else None)
+        if (el := document.getElementById(str(ID))): el.addEventListener(EVENTTYPE, lambda ev, id=str(ID): send_event(ev) if ev.target.id == id else None)
 
 
     def bind(self, cmp: Cmp, evtype, handler: "server-side"):  # pylint: disable=W0221
@@ -134,7 +139,7 @@ class DomReact(DomMorph):
         assert cmp._get_dom() is self
 
         self.eventers.add(
-            type(self).eventer(cmp.id, evtype, self.reactroute)
+            type(self).eventer(cmp.id, evtype)
         )
         handlers = self.handlers.setdefault(str(cmp.id), [])
 

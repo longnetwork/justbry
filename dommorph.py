@@ -317,7 +317,7 @@ class DomMorph(DomHtml):
             def _open(ev):
                 global morphhash;  # Этот код при инжекции во фронт-энд попадает как глобальный код (без строки декларации функции)
                 
-                # ev.srcElement.send("ping")
+                # ev.srcElement.send("_ping_")
                 el = document.getElementsByName("morphhash"); el = el and el[0]
                 if el:
                     morphhash = el.content
@@ -337,7 +337,7 @@ class DomMorph(DomHtml):
             def _message(ev):
                 console.debug(f"Dom Morphing size: {len(ev.data)} bytes")
                 try:                    
-                    if ev.data == 'pong': return
+                    if ev.data == '_pong_': return
                     
                     decompress(ev.data).then(morphing)
                         
