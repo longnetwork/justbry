@@ -37,8 +37,6 @@
 
 import itertools, inspect, textwrap as tw, weakref
 
-from functools import lru_cache
-
 
 from . import HTMLResponse
 
@@ -489,11 +487,10 @@ class Cmp(Tag):
         return result
         
 
-    @lru_cache()
     def _get_dom(self):
         """
             Комонент на вершине иерархии.
-            Можно кешировать поиск, но лучшая практика обновлять dom накопительным итогом в не покомпонентно
+            Можно кешировать поиск, но лучшая практика обновлять dom накопительным итогом
         """
         
         child = self; parent = child._parent

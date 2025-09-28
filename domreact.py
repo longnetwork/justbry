@@ -39,7 +39,7 @@ class DomReact(DomMorph):
 
         self.eventers = eventers
 
-        self.handlers = {};  # {target_id: [ (evtype, handler), ... ]}
+        self.handlers = {};  # {fromid: [ (evtype, handler), ... ]}
 
 
     async def response(self, request=None):
@@ -112,9 +112,10 @@ class DomReact(DomMorph):
             return result
 
 
-        def send_event(ev):
-            console.debug(f"Send Event `{ev.type}` to: {EVENTROUTE}")
-            compress(repr(event_to_dict(ev))).then( lambda data: ajax.post(EVENTROUTE, data=data) )
+        def send_event(ev, fromid):
+            console.debug(f"Send Event `{ev.type}` from id {fromid} to: {EVENTROUTE}")
+            data = event_to_dict(ev); data['fromid'] = fromid
+            compress(repr(data)).then( lambda d: ajax.post(EVENTROUTE, data=d) )
 
 
         # FIXME при рестарте uvicorn часто первый post-запрос по EVENTROUTE блокируется на протокольном уровне.
@@ -128,7 +129,7 @@ class DomReact(DomMorph):
     def eventer(ID=None, EVENTTYPE='onload'):
         """ Фронт-энд скрипт привязывающийся к компоненту единственное назначение которого - это слать событие на сервер """
         from react import document, send_event;  # pylint: disable=E0401
-        if (el := document.getElementById(str(ID))): el.addEventListener(EVENTTYPE, lambda ev, id=str(ID): send_event(ev) if ev.target.id == id else None)
+        if (el := document.getElementById(str(ID))): el.addEventListener(EVENTTYPE, lambda ev, fromid=ID: send_event(ev, fromid))
 
 
     def bind(self, cmp: Cmp, evtype, handler: "server-side"):  # pylint: disable=W0221
