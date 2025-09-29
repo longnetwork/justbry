@@ -53,6 +53,8 @@ class DomReact(DomMorph):
     def react(EVENTROUTE="/"):
         """ Модуль извлечения информации о событии и отправки на сервер """
         # pylint: disable=E0401,W0611,W0612
+
+        EVENT_TIMEOUT = 3
         
         from browser import document, window, ajax, console;   # noqa
         from morpher import compress
@@ -111,18 +113,21 @@ class DomReact(DomMorph):
                 
             return result
 
+        
+        def _ajax_event(data):
+            # FIXME после рестарта uvicorn первый ajax в chrome может уйти в долгий pending. Обходим это по таймауту
+            ajax.post(EVENTROUTE, data=data, timeout=EVENT_TIMEOUT,
+                      oncomplete=lambda req: ajax.post(EVENTROUTE, data=data) if not req.status else None)
 
         def send_event(ev, fromid):
             console.debug(f"Send Event `{ev.type}` from id {fromid} to: {EVENTROUTE}")
             data = event_to_dict(ev); data['fromid'] = fromid
-            compress(repr(data)).then( lambda d: ajax.post(EVENTROUTE, data=d) )
-
-
-        # FIXME при рестарте uvicorn часто первый post-запрос по EVENTROUTE блокируется на протокольном уровне.
-        #       Поэтому делаем начальный пинг (для принятия текущих заголовков)
-        ajax.post(EVENTROUTE, data="_ping_");  # Символа "_" нету в base64
-        
             
+            compress(repr(data)).then( _ajax_event )
+
+        # На всякий случай начальный пинг для принятия текущих заголовков
+        _ajax_event(data="_ping_");  # Символа "_" нету в base64
+        
 
     @DomMorph.brython
     @staticmethod
