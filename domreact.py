@@ -117,44 +117,21 @@ class DomReact(DomMorph):
         def _ajax_event(data):
             """
                 TODO После рестарта uvicorn первый ajax может уйти в долгий pending
-                     Пока временно через timeout вторая попытка
+                     Пока временно обходим это через доп. пинг и повторную попытку
             """
             event_url = f"{window.location.protocol}//{window.location.hostname}:{window.location.port}{EVENTROUTE}"
 
-            # ~ window.fetch(event_url, {
-                # ~ 'method': 'POST',
-                # ~ 'headers': {
-                    # ~ 'Content-Type': "text/plain;charset=UTF-8",
-                    # ~ 'Cache-Control': "no-cache",
-                    # ~ 'Access-Control-Allow-Origin': "*",
-                # ~ },
-                # ~ 'body': data,
-                # ~ 'priority': 'high',
-            # ~ }).then(
-                # ~ lambda r: console.error(f"Error Event: {r.status}") if not r.ok else None
-            # ~ ).catch(
-                # ~ lambda e: console.error(f"Error Event: {e}")
-            # ~ )
-
-            # ~ xhr = window.XMLHttpRequest.new()
-            # ~ xhr.open("POST", event_url, True)
-            # ~ xhr.setRequestHeader("Content-Type", "text/plain;charset=UTF-8")
-            # ~ xhr.setRequestHeader("Cache-Control", "no-cache")
-            # ~ xhr.setRequestHeader("Access-Control-Allow-Origin", "*")
-            # ~ xhr.onload = lambda _: console.error(f"Error Event: {xhr.status}") if not (200 <= xhr.status < 300) else None
-            # ~ xhr.onerror = lambda e: console.error(f"Error Event: {e}")
-            # ~ xhr.send(data)
-
             headers = {
                 'Content-Type': "text/plain;charset=UTF-8",
-                'Cache-Control': "no-cache",
-                # 'Access-Control-Allow-Origin': "*",                
+                'Cache-Control': "no-store",  # equivalent to: "private, no-cache, no-store, max-age=0, must-revalidate"
+                # 'Access-Control-Allow-Origin': "*",
+                'Priority': "u=0",
             }
 
-            if data != "_ping_":
-                ajax.post(event_url, headers=headers,  data="_ping_")
+            # Чтобы в pending встала не полезная нагрузка, и следующий ajax уже был быстрый
+            if data != "_ping_": ajax.post(event_url, headers=headers,  data="_ping_")
                         
-            ajax.post(event_url, headers=headers, data=data, timeout=EVENT_TIMEOUT,
+            ajax.post(event_url, headers=headers, data=data, timeout=EVENT_TIMEOUT,      # Будет повторная передача разок
                       oncomplete=lambda req: ajax.post(event_url, headers=headers, data=data) if not req.status else None)
 
 

@@ -193,7 +193,7 @@ class ReactEndpoint(HTTPEndpoint):
             request_body = await request.body();  # Строка base64 сжатых байт
 
             if request_body == b'_ping_':
-                return Response(status_code=202)
+                return Response(b'_pong_', status_code=202)
 
 
             data = gzip.decompress( base64.b64decode(request_body) )
@@ -227,7 +227,7 @@ class ReactEndpoint(HTTPEndpoint):
                         exc = e
                 
             if not exc:
-                return Response(status_code=202);                     # Accepted 
+                return Response(status_code=202);          # Accepted 
             else:
                 return Response(status_code=500);                     # Internal Server Error
             
@@ -249,7 +249,7 @@ class Justbry(Starlette):
         middleware = middleware or []
 
         if not any(issubclass(m.cls, VersionMiddleware) for m in middleware):
-            middleware.append(Middleware(VersionMiddleware))
+            middleware.insert(0, (Middleware(VersionMiddleware)))
 
 
         routes = routes or []
