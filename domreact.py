@@ -54,7 +54,7 @@ class DomReact(DomMorph):
         """ Модуль извлечения информации о событии и отправки на сервер """
         # pylint: disable=E0401,W0611,W0612
 
-        EVENT_TIMEOUT = 3
+        EVENT_START_TIMEOUT = 3; EVENT_MAX_TIMEOUT = 24
         
         from browser import document, window, ajax, console;   # noqa
         from morpher import compress
@@ -117,23 +117,28 @@ class DomReact(DomMorph):
         def _ajax_event(data):
             """
                 TODO После рестарта uvicorn первый ajax может уйти в долгий pending
-                     Пока временно обходим это через доп. пинг и повторную попытку
+                     Пока временно обходим это через повторные попытки
             """
             event_url = f"{window.location.protocol}//{window.location.hostname}:{window.location.port}{EVENTROUTE}"
 
             headers = {
                 'Content-Type': "text/plain;charset=UTF-8",
                 'Cache-Control': "no-store",  # equivalent to: "private, no-cache, no-store, max-age=0, must-revalidate"
-                # 'Access-Control-Allow-Origin': "*",
+                'Vary': '*',
                 'Priority': "u=0",
             }
 
-            # Чтобы в pending встала не полезная нагрузка, и следующий ajax уже был быстрый
-            if data != "_ping_": ajax.post(event_url, headers=headers,  data="_ping_")
-                        
-            ajax.post(event_url, headers=headers, data=data, timeout=EVENT_TIMEOUT,      # Будет повторная передача разок
-                      oncomplete=lambda req: ajax.post(event_url, headers=headers, data=data) if not req.status else None)
+            # Могут быть повторные передачи с прогрессирующим таймаутом
+            def _oncomplete(req, timeout):
+                if not req.status:
+                    timeout = timeout * 2
+                    if timeout <= EVENT_MAX_TIMEOUT:
+                        ajax.post( event_url, headers=headers, data=data, timeout = timeout,
+                                   oncomplete = lambda r, timeout=timeout: _oncomplete(r, timeout))
 
+            ajax.post( event_url, headers=headers, data=data, timeout=EVENT_START_TIMEOUT,
+                       oncomplete = lambda r, t=EVENT_START_TIMEOUT: _oncomplete(r, t) )
+            
 
         def send_event(ev, fromid):
             console.debug(f"Send Event `{ev.type}` from id {fromid} to: {EVENTROUTE}")
