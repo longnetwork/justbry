@@ -115,9 +115,48 @@ class DomReact(DomMorph):
 
         
         def _ajax_event(data):
-            # FIXME после рестарта uvicorn первый ajax в chrome может уйти в долгий pending. Обходим это по таймауту
-            ajax.post(EVENTROUTE, data=data, timeout=EVENT_TIMEOUT,
-                      oncomplete=lambda req: ajax.post(EVENTROUTE, data=data) if not req.status else None)
+            """
+                TODO После рестарта uvicorn первый ajax может уйти в долгий pending
+                     Пока временно через timeout вторая попытка
+            """
+            event_url = f"{window.location.protocol}//{window.location.hostname}:{window.location.port}{EVENTROUTE}"
+
+            # ~ window.fetch(event_url, {
+                # ~ 'method': 'POST',
+                # ~ 'headers': {
+                    # ~ 'Content-Type': "text/plain;charset=UTF-8",
+                    # ~ 'Cache-Control': "no-cache",
+                    # ~ 'Access-Control-Allow-Origin': "*",
+                # ~ },
+                # ~ 'body': data,
+                # ~ 'priority': 'high',
+            # ~ }).then(
+                # ~ lambda r: console.error(f"Error Event: {r.status}") if not r.ok else None
+            # ~ ).catch(
+                # ~ lambda e: console.error(f"Error Event: {e}")
+            # ~ )
+
+            # ~ xhr = window.XMLHttpRequest.new()
+            # ~ xhr.open("POST", event_url, True)
+            # ~ xhr.setRequestHeader("Content-Type", "text/plain;charset=UTF-8")
+            # ~ xhr.setRequestHeader("Cache-Control", "no-cache")
+            # ~ xhr.setRequestHeader("Access-Control-Allow-Origin", "*")
+            # ~ xhr.onload = lambda _: console.error(f"Error Event: {xhr.status}") if not (200 <= xhr.status < 300) else None
+            # ~ xhr.onerror = lambda e: console.error(f"Error Event: {e}")
+            # ~ xhr.send(data)
+
+            headers = {
+                'Content-Type': "text/plain;charset=UTF-8",
+                'Cache-Control': "no-cache",
+                # 'Access-Control-Allow-Origin': "*",                
+            }
+
+            if data != "_ping_":
+                ajax.post(event_url, headers=headers,  data="_ping_")
+                        
+            ajax.post(event_url, headers=headers, data=data, timeout=EVENT_TIMEOUT,
+                      oncomplete=lambda req: ajax.post(event_url, headers=headers, data=data) if not req.status else None)
+
 
         def send_event(ev, fromid):
             console.debug(f"Send Event `{ev.type}` from id {fromid} to: {EVENTROUTE}")
