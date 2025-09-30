@@ -52,7 +52,7 @@ class DomReact(DomMorph):
     @staticmethod
     def react(EVENTROUTE="/"):
         """ Модуль извлечения информации о событии и отправки на сервер """
-        # pylint: disable=E0401,W0611,W0612
+        # pylint: disable=E0401,W0611,W0612,W0621,W0601
 
         EVENT_START_TIMEOUT = 3; EVENT_MAX_TIMEOUT = 24
         
@@ -139,10 +139,16 @@ class DomReact(DomMorph):
             ajax.post( event_url, headers=headers, data=data, timeout=EVENT_START_TIMEOUT,
                        oncomplete = lambda r, t=EVENT_START_TIMEOUT: _oncomplete(r, t) )
             
+        reactCount = 0;  # Для уникальности хеша события на стороне сервера (есть также timeStamp)
 
         def send_event(ev, fromid):
+            global reactCount
+            
+            reactCount += 1
+            
+            data = event_to_dict(ev); data['fromid'] = fromid; data['reactCount'] = reactCount
+
             console.debug(f"Send Event `{ev.type}` from id {fromid} to: {EVENTROUTE}")
-            data = event_to_dict(ev); data['fromid'] = fromid
             
             compress(repr(data)).then( _ajax_event )
 

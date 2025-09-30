@@ -45,6 +45,7 @@ async def homepage(request):
 
     async def update_info(ev):
         info.attrs.literal = str(ev)
+        
         await dom.update()
 
     # dom.bind(btn, 'click', update_info)

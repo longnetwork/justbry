@@ -65,27 +65,6 @@ class DomMorph(DomHtml):
         self.alock = asyncio.Lock()
 
 
-    async def response(self, _request=None):
-        """
-            Может быть открыта иная вкладка, иной инстанц, иная сессия, и т.д. - поэтому
-            у нас много self.morphsockets но self.morphroute один уникальный для данного dom
-
-            XXX Пока не будет self.update() body не изменится (морфинг накопительным итогом)
-
-        """
-        self.morphendpoint.doms[self.dom_id] = self
-
-        async with self.alock:
-
-            body = deepcopy(self.body); morphhash = hash(body)
-
-            if morphhash not in self.responses:
-                self.morphhash.attrs.content = str(morphhash)
-                self.responses[morphhash] = ( body, HTMLResponse(self.render()) )
-            
-            return self.responses[morphhash][1];  # HTMLResponse(self.render()) XXX Кешированный рендер
-
-
     @staticmethod
     def compare_dom(cmp, _cmp) -> """
                                    ('outerHTML', _id, id, outerHTML) |
@@ -358,6 +337,25 @@ class DomMorph(DomHtml):
             console.error("Web Sockets are not supported")
 
 
+    async def response(self, _request=None):
+        """
+            Может быть открыта иная вкладка, иной инстанц, иная сессия, и т.д. - поэтому
+            у нас много self.morphsockets но self.morphroute один уникальный для данного dom
+
+            XXX Пока не будет self.update() body не изменится (морфинг накопительным итогом)
+
+        """
+        self.morphendpoint.doms[self.dom_id] = self
+
+        async with self.alock:
+
+            body = deepcopy(self.body); morphhash = hash(body)
+
+            if morphhash not in self.responses:
+                self.morphhash.attrs.content = str(morphhash)
+                self.responses[morphhash] = ( body, HTMLResponse(self.render()) )
+            
+            return self.responses[morphhash][1];  # HTMLResponse(self.render()) XXX Кешированный рендер
 
     async def update(self):
 
@@ -377,6 +375,7 @@ class DomMorph(DomHtml):
                         updates.append(socket.send_text( base64.b64encode(gzip.compress(repr(diffs).encode())).decode() ))
                         _body = body
                     # morphhash менять нельзя, чтобы работала очистка self.responses при закрытии сокета
+                    # То есть morphhash - это первый хешь при первой отдачи response на сторону браузера
                     self.morphsockets[socket] = (_body, morphhash)
 
             if updates:

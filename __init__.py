@@ -3,6 +3,8 @@
     Модуль justbry как надстройка над starlette и точка импорта системных классов
 """
 
+from collections import deque
+
 import re, weakref, gzip, base64, inspect, logging
 from ast import literal_eval
 import asyncio
@@ -116,6 +118,8 @@ class MorphEndpoint(WebSocketEndpoint):
 
         
     doms = {};  # {str(id(dom)): dom, ...} удерживает dom пока не будут закрыты все сокеты
+                # Не может быть weakref.WeakValueDictionary(), так как dom могут создаваться на лету
+                # и это единственное место где он удерживается в памяти (единственная ссылка на dom)
     
     async def on_connect(self, websocket):
         await websocket.accept()
@@ -125,7 +129,7 @@ class MorphEndpoint(WebSocketEndpoint):
                 
     async def on_receive(self, websocket, data):
         if data == '_ping_':
-            await websocket.send_text('_pong_');                        # Это преимущественно исходящий сокет
+            await websocket.send_text('_pong_');                      # Это преимущественно исходящий сокет
             return
 
         if not isinstance(data, str):
@@ -182,6 +186,8 @@ class ReactEndpoint(HTTPEndpoint):
     reactroute = "/evt/{dom_id}"
 
     doms = weakref.WeakValueDictionary();  # {str(id(dom)): dom, ...} Будет удерживаться пока есть в MorphEndpoint.doms
+
+    eventset = deque(maxlen=1024);  # ~ 8к байт памяти в пике
     
     async def post(self, request):  # XXX put не безопасный для CORS
         
@@ -195,6 +201,13 @@ class ReactEndpoint(HTTPEndpoint):
 
             if request_body == b'_ping_':
                 return Response(b'_pong_', status_code=202)
+
+            hash_body = hash(request_body)
+            if hash_body in self.eventset:        # Срезаем дубликаты
+                print("!!!!!", hash_body)
+                return Response(status_code=208);                     # Already Reported
+
+            self.eventset.append(hash_body)
 
 
             data = gzip.decompress( base64.b64decode(request_body) )
@@ -218,7 +231,7 @@ class ReactEndpoint(HTTPEndpoint):
                         # lambda возвращающая coroutine также допустима
                         # XXX handlers исполняются в пределах одного dom в порядке назначения
                         # FIXME Подумать над оптимизациями связанными с назначениями многих ReactEndpoint вместо одного на всех
-                        #       
+                        #       А также над параллелизацией корутин (await asyncio.gather(*coroutine, return_exceptions=True))
                         ret = handler(event)
                         if asyncio.iscoroutine(ret):
                             await ret
@@ -228,13 +241,13 @@ class ReactEndpoint(HTTPEndpoint):
                         exc = e
                 
             if not exc:
-                return Response(status_code=202);          # Accepted 
+                return Response(status_code=202);                     # Accepted
             else:
                 return Response(status_code=500);                     # Internal Server Error
             
         except Exception as e:
             if (log := getLogger()): log.exception(e)
-            return Response(status_code=406);                         # Not Acceptable 
+            return Response(status_code=406);                         # Not Acceptable
             
             
 
