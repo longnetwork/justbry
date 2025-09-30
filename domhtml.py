@@ -508,6 +508,12 @@ class Cmp(Tag):
         if hasattr(dom, 'bind'):
             dom.bind(self, evtype, handler)
 
+    def dirty(self):
+        """
+            Маркировка компонента для гарантии обновления через морфинг dom
+        """
+        self.upd_attrs(data_dirty = (self.get_attrs().get('data_dirty') or 0) + 1)
+
     async def update(self):
         dom = self._get_dom()
         if hasattr(dom, 'update'):
