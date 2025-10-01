@@ -187,7 +187,7 @@ class ReactEndpoint(HTTPEndpoint):
 
     doms = weakref.WeakValueDictionary();  # {str(id(dom)): dom, ...} Будет удерживаться пока есть в MorphEndpoint.doms
 
-    eventset = deque(maxlen=1024);  # ~ 8к байт памяти в пике
+    eventset = deque(maxlen=1024 * 8);     # ~ 64к байт памяти в пике
     
     async def post(self, request):  # XXX put не безопасный для CORS
         
@@ -204,7 +204,6 @@ class ReactEndpoint(HTTPEndpoint):
 
             hash_body = hash(request_body)
             if hash_body in self.eventset:        # Срезаем дубликаты
-                print("!!!!!", hash_body)
                 return Response(status_code=208);                     # Already Reported
 
             self.eventset.append(hash_body)
