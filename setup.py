@@ -28,7 +28,7 @@ setup(
     
 
     install_requires=[
-        'uvicorn[standart]>=0.37',
+        'uvicorn>=0.37',
         'starlette>=0.48',
         'python-multipart>=0.0.20',
         'websockets>=14.1',
