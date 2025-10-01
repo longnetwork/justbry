@@ -8,37 +8,42 @@ from justbry import Justbry, Middleware, CORSMiddleware, SessionMiddleware, Redi
 from justbry.domreact import DomReact, Cmp
 
 
-def get_dom():
-    dom = DomReact(
-        Cmp('div')(
+class DomView(DomReact):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.body.add(
+
+            Cmp('div')(
+                _info := Cmp('text'),
+            ),
+
+            # onsubmit="return false;" предотвращает авто-перезагрузку браузером страницы после submit
+            _form := Cmp('form', onsubmit="return false;")(
+                Cmp('input', type="text", name="login", value="login"),
+                Cmp('input', type="text", name="password", value="password"),
+
+                # Браузеры по умолчанию после события submit автоматически перезагружают текущую страницу
+                Cmp('input', type="submit", name="submit", value="submit"),  
+            ),
+        )
+
+        self.info = _info
+        self.form = _form
+
+        self.form.bind('submit', self.submit)
+
+    async def submit(self, ev):
+        self.info.attrs.literal = str(ev)
         
-            _info := Cmp('text'),
-        ),
+        await self.update()
 
-        # onsubmit="return false;" предотвращает авто-перезагрузку браузером страницы после submit
-        _form := Cmp('form', onsubmit="return false;")(
-            Cmp('input', type="text", name="login", value="login"),
-            Cmp('input', type="text", name="password", value="password"),
-
-            # Браузеры после события submit автоматически перезагружают текущую страницу
-            Cmp('input', type="submit", name="submit", value="submit"),  
-        ),
-
-        version = 0.1
-    )
-
-    dom.info = _info
-    dom.form = _form
-
-    async def submit(ev):
-        dom.info.attrs.literal = str(ev)
-
-        await dom.update()
-
-    dom.form.bind('submit', submit)
-
-    return dom
-
+    async def response(self, request=None):
+        session_id = request and request.session['id']
+        self.info.attrs.literal = f"session_id: {session_id}"
+        
+        return await super().response(request)
 
 
 app = Justbry(
@@ -65,27 +70,15 @@ app = Justbry(
 
 @app.route('/')
 async def web(request):
+    if 'id' not in request.session:
+        request.session['id'] = ''.join(random.choice(string.ascii_letters) for i in range(16))
 
     return RedirectResponse("/page")
 
 @app.route('/page')
 async def page(request):
-
-    if 'id' not in request.session:
-        request.session['id'] = ''.join(random.choice(string.ascii_letters) for i in range(16))
-
-
-    return RedirectResponse(f"/page/{request.session['id']}")
+    return await DomView().response(request)
     
-
-@app.route("/page/{sessid:str}")
-async def sessid(request):
-
-    dom = get_dom()
-
-    dom.info.attrs.literal = "session_id: " + request.session['id']
-    
-    return await dom.response()
 
 
 print(f"Routes: {app.routes}")
