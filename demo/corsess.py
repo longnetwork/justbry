@@ -28,6 +28,7 @@ dom = DomReact(
 
 async def submit(ev):
     info.attrs.literal = str(ev)
+    
     await dom.update()
 
 form.bind('submit', submit)

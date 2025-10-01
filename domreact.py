@@ -4,6 +4,7 @@
     DOM с биндингом событий передаваемых на сторону сервера
 """
 
+from collections import deque
 
 from .dommorph import DomMorph, Cmp
 
@@ -41,6 +42,7 @@ class DomReact(DomMorph):
 
         self.handlers = {};  # {fromid: [ (evtype, handler), ... ]}
 
+        self.evque = deque(maxlen=256)
 
     async def response(self, request=None):
         self.reactendpoint.doms[self.dom_id] = self

@@ -3,8 +3,6 @@
     Модуль justbry как надстройка над starlette и точка импорта системных классов
 """
 
-from collections import deque
-
 import re, weakref, gzip, base64, inspect, logging
 from ast import literal_eval
 import asyncio
@@ -186,8 +184,6 @@ class ReactEndpoint(HTTPEndpoint):
     reactroute = "/evt/{dom_id}"
 
     doms = weakref.WeakValueDictionary();  # {str(id(dom)): dom, ...} Будет удерживаться пока есть в MorphEndpoint.doms
-
-    eventset = deque(maxlen=1024 * 8);     # ~ 64к байт памяти в пике
     
     async def post(self, request):  # XXX put не безопасный для CORS
         
@@ -203,10 +199,11 @@ class ReactEndpoint(HTTPEndpoint):
                 return Response(b'_pong_', status_code=202)
 
             hash_body = hash(request_body)
-            if hash_body in self.eventset:        # Срезаем дубликаты
+            if hash_body in dom.evque:            # Срезаем дубликаты
                 return Response(status_code=208);                     # Already Reported
 
-            self.eventset.append(hash_body)
+
+            dom.evque.append(hash_body)
 
 
             data = gzip.decompress( base64.b64decode(request_body) )
