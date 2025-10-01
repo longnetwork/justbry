@@ -8,30 +8,36 @@ from justbry import Justbry, Middleware, CORSMiddleware, SessionMiddleware, Redi
 from justbry.domreact import DomReact, Cmp
 
 
-dom = DomReact(
-    container := Cmp('div')(
-    
-        info := Cmp('text'),
-    ),
+def get_dom():
+    dom = DomReact(
+        Cmp('div')(
+        
+            _info := Cmp('text'),
+        ),
 
-    # onsubmit="return false;" предотвращает авто-перезагрузку браузером страницы после submit
-    # form := Cmp('form')(
-    form := Cmp('form', onsubmit="return false;")(
-        Cmp('input', type="text", name="login", value="login"),
-        Cmp('input', type="text", name="password", value="password"),
+        # onsubmit="return false;" предотвращает авто-перезагрузку браузером страницы после submit
+        _form := Cmp('form', onsubmit="return false;")(
+            Cmp('input', type="text", name="login", value="login"),
+            Cmp('input', type="text", name="password", value="password"),
 
-        # Браузеры после события submit автоматически перезагружают текущую страницу
-        Cmp('input', type="submit", name="submit", value="submit"),  
-    ),
-)
+            # Браузеры после события submit автоматически перезагружают текущую страницу
+            Cmp('input', type="submit", name="submit", value="submit"),  
+        ),
 
+        version = 0.1
+    )
 
-async def submit(ev):
-    info.attrs.literal = str(ev)
-    
-    await dom.update()
+    dom.info = _info
+    dom.form = _form
 
-form.bind('submit', submit)
+    async def submit(ev):
+        dom.info.attrs.literal = str(ev)
+
+        await dom.update()
+
+    dom.form.bind('submit', submit)
+
+    return dom
 
 
 
@@ -68,14 +74,22 @@ async def page(request):
     if 'id' not in request.session:
         request.session['id'] = ''.join(random.choice(string.ascii_letters) for i in range(16))
 
-    info.attrs.literal = "session_id: " + request.session['id']
+
+    return RedirectResponse(f"/page/{request.session['id']}")
+    
+
+@app.route("/page/{sessid:str}")
+async def sessid(request):
+
+    dom = get_dom()
+
+    dom.info.attrs.literal = "session_id: " + request.session['id']
     
     return await dom.response()
 
 
-
 print(f"Routes: {app.routes}")
-
+print(f"Middlewares: {app.user_middleware}")
 
 
 
