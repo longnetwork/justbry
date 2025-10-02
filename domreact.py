@@ -40,7 +40,7 @@ class DomReact(DomMorph):
 
         self.eventers = eventers
 
-        self.handlers = {};  # {fromid: [ (evtype, handler), ... ]}
+        self.handlers = {};  # {currentTarget: [ (evtype, handler), ... ]}
 
         self.evque = deque(maxlen=256)
 
@@ -106,13 +106,19 @@ class DomReact(DomMorph):
             return res
 
         def event_to_dict(ev):
+            ct = ev.currentTarget
             tt = ev.target
             
+            
             result = {}
+            
             result.update(_event_props_to_dict(ev))
-            target = result['target'] = {}
-            target.update(_event_props_to_dict(tt))
-                
+
+            currentTarget = result['currentTarget'] = {}; currentTarget.update(_event_props_to_dict(ct))
+
+            if ct.id != tt.id:
+                target = result['target'] = {};           target.update(_event_props_to_dict(tt))
+            
             return result
 
         
@@ -143,16 +149,16 @@ class DomReact(DomMorph):
             
         reactCount = 0;  # Для уникальности хеша события на стороне сервера (есть также timeStamp)
 
-        def send_event(ev, fromid):
+        def send_event(ev):
             global reactCount
             
             reactCount += 1
             
-            data = event_to_dict(ev); data['fromid'] = fromid; data['reactCount'] = reactCount
+            data = event_to_dict(ev); data['reactCount'] = reactCount
 
-            console.debug(f"Send Event `{ev.type}` from id {fromid} to: {EVENTROUTE}")
+            console.debug(f"Send Event `{ev.type}` from id {ev.currentTarget.id} to: {EVENTROUTE}")
             
-            compress(repr(data)).then( _ajax_event )
+            return compress(repr(data)).then( _ajax_event );  # Promise
 
         # На всякий случай начальный пинг для принятия текущих заголовков
         _ajax_event(data="_ping_");  # Символа "_" нету в base64
@@ -163,7 +169,7 @@ class DomReact(DomMorph):
     def eventer(ID=None, EVENTTYPE='onload'):
         """ Фронт-энд скрипт привязывающийся к компоненту единственное назначение которого - это слать событие на сервер """
         from react import document, send_event;  # pylint: disable=E0401
-        if (el := document.getElementById(str(ID))): el.addEventListener(EVENTTYPE, lambda ev, fromid=ID: send_event(ev, fromid))
+        if (el := document.getElementById(str(ID))): el.addEventListener(EVENTTYPE, send_event)
 
 
     def bind(self, cmp: Cmp, evtype, handler: "server-side"):  # pylint: disable=W0221

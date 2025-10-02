@@ -212,9 +212,9 @@ class ReactEndpoint(HTTPEndpoint):
             
             event = literal_eval(data.decode('utf-8'))
 
-            fromid = str(event.get('fromid'))
+            currentTarget = str(event.get('currentTarget', {}).get('id'))
 
-            handlers = dom.handlers.get(fromid)
+            handlers = dom.handlers.get(currentTarget)
             if not handlers: return Response(status_code=422);        # Unprocessable Entity 
 
             event_type = event['type']
