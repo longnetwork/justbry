@@ -57,12 +57,13 @@ class DomReact(DomMorph):
         # pylint: disable=E0401,W0611,W0612,W0621,W0601
 
         EVENT_START_TIMEOUT = 3; EVENT_MAX_TIMEOUT = 24
-        
-        from browser import document, window, ajax, console;   # noqa
+
+        # from javascript import JSObject
+        from browser import document, window, ajax, console, timer;   # noqa
         from morpher import compress
 
         event_props_black_list = {
-            # FIXME Определиться с полным списком не нужного
+            # FIXME Определиться с полным списком не нужного для оптимизации
             'baseURI',
             'namespaceURI',
             'innerHTML',
@@ -82,15 +83,20 @@ class DomReact(DomMorph):
         }
 
         event_props_while_list = {
+            # FIXME Определиться с полным списком нужного для оптимизации
             'elements',  # HTMLFormControlsCollection
         }
         
         def _event_props_to_dict(el):
             res = {}
             for k in el.__dict__:
-                if k.isupper(): continue
-                if k in event_props_black_list: continue
-                v = getattr(el, k, None)
+                try:
+                    if k.startswith('_'): continue
+                    if k.isupper(): continue
+                    if k in event_props_black_list: continue
+                    v = getattr(el, k, None)
+                except:
+                    continue
                 
                 # Оптимизация (пустое не шлем)
                 
@@ -158,7 +164,8 @@ class DomReact(DomMorph):
 
             console.debug(f"Send Event `{ev.type}` from id {ev.currentTarget.id} to: {EVENTROUTE}")
             
-            return compress(repr(data)).then( _ajax_event );  # Promise
+            # return compress(repr(data)).then( _ajax_event );  # Promise
+            return timer.set_timeout(lambda: compress(repr(data)).then( _ajax_event ), 1);  # ms
 
         # На всякий случай начальный пинг для принятия текущих заголовков
         _ajax_event(data="_ping_");  # Символа "_" нету в base64
@@ -169,7 +176,7 @@ class DomReact(DomMorph):
     def eventer(ID=None, EVENTTYPE='onload'):
         """ Фронт-энд скрипт привязывающийся к компоненту единственное назначение которого - это слать событие на сервер """
         from react import document, send_event;  # pylint: disable=E0401
-        if (el := document.getElementById(str(ID))): el.addEventListener(EVENTTYPE, send_event)
+        if (el := document.getElementById(str(ID))): el.bind(EVENTTYPE, send_event)
 
 
     def bind(self, cmp: Cmp, evtype, handler: "server-side"):  # pylint: disable=W0221

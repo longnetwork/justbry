@@ -168,7 +168,7 @@ class DomMorph(DomHtml):
         (String, TextEncoder, TextDecoder, 
          CompressionStream, DecompressionStream,
          Response, Uint8Array,
-         btoa, atob,
+         btoa, atob,  # noqa
          js_eval) = (window.String, window.TextEncoder, window.TextDecoder, 
                      window.CompressionStream, window.DecompressionStream,
                      window.Response, window.Uint8Array,
@@ -224,18 +224,15 @@ class DomMorph(DomHtml):
 
         from ast import literal_eval
         
-        from browser import console, document, window
+        from browser import console, document, window, websocket
         from morpher import decompress
-        
 
-        websocket = window.WebSocket.new if hasattr(window, 'WebSocket') and window.WebSocket else None
-
-        if websocket:  # WebSocket supported
+        if websocket.supported:  # WebSocket supported
             
-            ws = websocket(MORPHROUTE); morphhash = '';  # morphhash во фронт-энде в globals
+            ws = websocket.WebSocket(MORPHROUTE); morphhash = '';  # morphhash во фронт-энде в globals
 
-            def morphing(data):  # Морфинг DOM
-                global morphhash
+            def morphing(data):    # Морфинг DOM
+                global morphhash;  # noqa
 
                 if not morphhash: return
 
@@ -304,7 +301,7 @@ class DomMorph(DomHtml):
                     console.info(f"Morpher open: {morphhash=}")
 
             def _close(_ev):
-                global morphhash
+                global morphhash;  # noqa
                 
                 console.warn(f"Morpher Close: {morphhash=}")
 
@@ -331,7 +328,7 @@ class DomMorph(DomHtml):
 
             # Это необходимо что бы закрытие сокета шло до того как пойдет новый запрос при обновлении страницы
             # (Chromium подглючивает на этом месте: https://issues.chromium.org/issues/40839988)
-            window.addEventListener('beforeunload', lambda ev: ws.close() if ws.readyState == window.WebSocket.OPEN else None)
+            window.bind('beforeunload', lambda ev: ws.close() if ws.readyState == window.WebSocket.OPEN else None)
 
         else:
             console.error("Web Sockets are not supported")

@@ -60,7 +60,7 @@ async def homepage(request):
 
     inp.bind('input', update_info)
     
-    frm.bind('mouseover', update_info)
+    # frm.bind('mouseover', update_info)
     
     frm.bind('submit', update_info)
 
