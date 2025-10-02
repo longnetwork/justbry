@@ -124,10 +124,10 @@ class DomReact(DomMorph):
         
         def _ajax_event(data):
             """
-                TODO После рестарта uvicorn первый ajax может уйти в долгий pending
-                     Пока временно обходим это через повторные попытки
+                XXX Барузеры могут ставить ajax в очередь - используем алгоритм пропихивания события на сервер с прогрессирующим таймаутом
             """
-            event_url = f"{window.location.protocol}//{window.location.hostname}:{window.location.port}{EVENTROUTE}"
+            # event_url = f"{window.location.protocol}//{window.location.hostname}:{window.location.port}{EVENTROUTE}"
+            event_url = EVENTROUTE
 
             headers = {
                 'Content-Type': "text/plain;charset=UTF-8",
