@@ -108,12 +108,16 @@ class DomView(DomReact):
                 login = el.get('value', '').strip()
             elif el.get('type') == 'password':
                 password = el.get('value', '').strip()
+
+        # DB Access Simulate
+        from time import sleep
+        for c in "⓵⓶⓷✌":
+            self.info.attrs.literal = c
+            await self.update()
+            sleep(0.75)
         
         self.info.attrs.literal = f"login: {login}<br>password: {password}"
         self.button.dirty()
-
-        from time import sleep
-        sleep(1.0);  # DB Access Simulate
         
         await self.update()
 
