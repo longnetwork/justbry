@@ -311,7 +311,7 @@ class DomMorph(DomHtml):
                     window.location.replace(window.location.href)
 
             def _message(ev):
-                global morphhash;  # noqa
+                global morphhash
                 
                 console.debug(f"Dom Morphing size: {len(ev.data)} bytes")
                 try:                    
@@ -339,7 +339,15 @@ class DomMorph(DomHtml):
 
             # Это необходимо что бы закрытие сокета шло до того как пойдет новый запрос при обновлении страницы
             # (Chromium подглючивает на этом месте: https://issues.chromium.org/issues/40839988)
-            window.bind('beforeunload', lambda ev: ws.close() if ws.readyState == window.WebSocket.OPEN else None)
+            def _beforeunload(_ev):
+                global morphhash
+                
+                morphhash = ''
+                # if ws.readyState == window.WebSocket.OPEN:
+                if True:
+                    ws.close()
+                    
+            window.bind('beforeunload', _beforeunload)
 
         else:
             console.error("Web Sockets are not supported")

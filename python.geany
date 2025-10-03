@@ -23,12 +23,12 @@ long_line_behaviour=1
 long_line_column=72
 
 [files]
-current_page=0
+current_page=4
 FILE_NAME_0=2538;Python;0;EUTF-8;0;1;0;%2Fhome%2Fmint%2FWork%2Fjustbry%2Fdemo%2Fcorsess.py;0;4
 FILE_NAME_1=256;Markdown;0;EUTF-8;0;1;0;%2Fhome%2Fmint%2FWork%2Fjustbry%2FREADME.md;0;4
 FILE_NAME_2=6774;Python;0;EUTF-8;0;1;0;%2Fhome%2Fmint%2FWork%2Fjustbry%2Fdomreact.py;0;4
 FILE_NAME_3=10142;Python;0;EUTF-8;0;1;0;%2Fhome%2Fmint%2FWork%2Fjustbry%2F__init__.py;0;4
-FILE_NAME_4=21193;Python;0;EUTF-8;0;1;0;%2Fhome%2Fmint%2FWork%2Fjustbry%2Fdommorph.py;0;4
+FILE_NAME_4=12448;Python;0;EUTF-8;0;1;0;%2Fhome%2Fmint%2FWork%2Fjustbry%2Fdommorph.py;0;4
 FILE_NAME_5=4069;Python;0;EUTF-8;0;1;0;%2Fhome%2Fmint%2FWork%2Fjustbry%2Fdemo%2Fmorph.py;0;4
 FILE_NAME_6=1119;Python;0;EUTF-8;0;1;0;%2Fhome%2Fmint%2FWork%2Fjustbry%2Fdemo%2Freact.py;0;4
 FILE_NAME_7=20408;Python;0;EUTF-8;0;1;0;%2Fhome%2Fmint%2FWork%2Fjustbry%2Fdomhtml.py;0;4
@@ -47,7 +47,7 @@ FILE_NAME_19=106;Python;0;EUTF-8;0;1;0;%2Fhome%2Fmint%2FWork%2Fjustbry%2Fstatic%
 FILE_NAME_20=2087;Python;0;EUTF-8;0;1;0;%2Fhome%2Fmint%2FWork%2Fjustbry%2Fdemo%2Fdom.py;0;4
 
 [VTE]
-last_dir=/home/mint/Work/justbry/demo
+last_dir=/home/mint/Work/justbry
 
 [editor]
 line_wrapping=false
