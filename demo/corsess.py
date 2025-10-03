@@ -73,8 +73,7 @@ class DomView(DomReact):
                 )),
                 
                 Cmp('div', classes="columns is-justify-content-center")(Cmp('div', classes="column is-two-fifths")(
-                    # onsubmit="return false;" предотвращает авто-перезагрузку браузером страницы после submit
-                    _form := Cmp('form', id='form', classes="box", onsubmit="return false;")(
+                    _form := Cmp('form', id='form', classes="box")(
                         _login := cls.input_field("fas fa-user", "Login",
                                                   type='text',
                                                   placeholder="Enter Login",
@@ -121,6 +120,9 @@ class DomView(DomReact):
         
         await self.update()
 
+        sleep(0.75)
+
+        await self.locate("/")
 
     async def response(self, request=None):
         session_id = request and request.session['id']
@@ -161,7 +163,7 @@ async def web(request):
 @app.route('/page')
 async def page(request):
     return await DomView().response(request)
-    
+ 
 
 
 print(f"Routes: {app.routes}")

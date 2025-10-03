@@ -44,20 +44,19 @@ dom = DomHtml(
         helloworld2()
     ),
 
-    
+    Cmp('script', type="text/python")("""
+        from browser import window
+
+        print(f"{window.location.href=}")
+        print(f"{window.location.pathname=}")
+    """),    
+
     version = time.time(),  # В место этого может быть hash от всех значимых файлов в static/
     
 )
 
 dom.body.add(  # Инжекция Brython-консоли
     
-    Cmp('div', id='interpreter', contenteditable=True)(
-        Cmp('script', type="text/python")("""
-            from interpreter import Interpreter
-            Interpreter('interpreter', title="Brython", globals=None, locals=None, rows=30, cols=120, default_css=False)
-        """),
-    ),
-
     Cmp('style')("""
         #interpreter {
             display: grid;
@@ -70,6 +69,13 @@ dom.body.add(  # Инжекция Brython-консоли
             background: black;
         }
     """),
+
+    Cmp('div', id='interpreter', contenteditable=True)(
+        Cmp('script', type="text/python")("""
+            from interpreter import Interpreter
+            Interpreter('interpreter', title="Brython", globals=None, locals=None, rows=30, cols=120, default_css=False)
+        """),
+    ),
     
 )
 
@@ -80,7 +86,8 @@ print(dom.render())
 app = Justbry(
     debug=True,
     routes=[
-        Route('/', dom.response)
+        Route('/', dom.response),
+        # Route('/page', dom.response),
     ]
 )
 

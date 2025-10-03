@@ -132,6 +132,7 @@ class DomReact(DomMorph):
             """
                 XXX Барузеры могут ставить ajax в очередь (например при перезапуске uvicorn с открытыми сессиями)
                     - используем алгоритм пропихивания события на сервер с прогрессирующим таймаутом
+                    - используем ev.preventDefault() для предотвращения NS_BINDONG_ABORTED 
             """
             # event_url = f"{window.location.protocol}//{window.location.hostname}:{window.location.port}{EVENTROUTE}"
             event_url = EVENTROUTE
@@ -161,6 +162,8 @@ class DomReact(DomMorph):
 
         def send_event(ev):
             global reactCount
+
+            ev.preventDefault()
             
             reactCount += 1
             
@@ -168,9 +171,8 @@ class DomReact(DomMorph):
 
             console.debug(f"Send Event `{ev.type}` from id {ev.currentTarget.id} to: {EVENTROUTE}")
 
-            # return timer.set_timeout(lambda: compress(repr(data)).then( _ajax_event ), 1);  # ms
-            return compress(repr(data)).then( _ajax_event );  # Promise
-            
+            # return compress(repr(data)).then( _ajax_event );  # Promise
+            compress(repr(data)).then( _ajax_event ); return False
 
         # На всякий случай начальный пинг для принятия текущих заголовков
         _ajax_event(data="_ping_");  # Символа "_" нету в base64

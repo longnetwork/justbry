@@ -28,8 +28,7 @@ async def homepage(request):
             ),
 
             Cmp('div', classes="box")(
-                # onsubmit="return false;" предотвращает авто-перезагрузку браузером страницы после submit
-                frm := Cmp('form', onsubmit="return false;")(
+                frm := Cmp('form')(
                     Cmp('div', classes="field")(Cmp('input', type="input", classes="input", name="login")),
                     Cmp('div', classes="field")(Cmp('input', type="input", classes="input", name="passw")),
                     Cmp('div', classes="control")(Cmp('input', type="submit", classes="button", name="submit")),

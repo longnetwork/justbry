@@ -311,9 +311,20 @@ class DomMorph(DomHtml):
                     window.location.replace(window.location.href)
 
             def _message(ev):
+                global morphhash;  # noqa
+                
                 console.debug(f"Dom Morphing size: {len(ev.data)} bytes")
                 try:                    
-                    if ev.data == '_pong_': return
+                    if ev.data == '_pong_':                # XXX Сервер сам пингует сокеты без нашего участия
+                        return
+
+                    if ev.data.startswith('_href_'):
+                        href = ev.data[6:]
+                        
+                        morphhash = '';                    # Будет закрытие сокета без  location.replace()
+                        
+                        window.location.assign(href)
+                        return
                     
                     decompress(ev.data).then(morphing)
                         
@@ -381,4 +392,14 @@ class DomMorph(DomHtml):
                     if isinstance(e, Exception):
                         if (log := getLogger()): log.exception(e)
 
-        
+    async def locate(self, href = '/'):
+        async with self.alock:
+            updates = []
+            for socket, _ in list(self.morphsockets.items()):
+                updates.append(socket.send_text( f"_href_{href}" ))
+
+            if updates:
+                results = await asyncio.gather(*updates, return_exceptions=True)
+                for e in results:
+                    if isinstance(e, Exception):
+                        if (log := getLogger()): log.exception(e)                
