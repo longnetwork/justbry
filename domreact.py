@@ -145,11 +145,14 @@ class DomReact(DomMorph):
 
             # Могут быть повторные передачи с прогрессирующим таймаутом
             def _oncomplete(req, timeout):
-                if not req.status:
-                    timeout = timeout * 2
-                    if timeout <= EVENT_MAX_TIMEOUT:
-                        ajax.post( event_url, headers=headers, data=data, timeout = timeout,
-                                   oncomplete = lambda r, timeout=timeout: _oncomplete(r, timeout))
+                try:
+                    if not req.status:
+                        timeout = timeout * 2
+                        if timeout <= EVENT_MAX_TIMEOUT:
+                            ajax.post( event_url, headers=headers, data=data, timeout = timeout,
+                                       oncomplete = lambda r, timeout=timeout: _oncomplete(r, timeout))
+                finally:
+                    req.abort()
 
             ajax.post( event_url, headers=headers, data=data, timeout=EVENT_START_TIMEOUT,
                        oncomplete = lambda r, t=EVENT_START_TIMEOUT: _oncomplete(r, t) )
