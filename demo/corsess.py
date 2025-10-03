@@ -5,39 +5,118 @@ import random, string
 
 
 from justbry import Justbry, Middleware, CORSMiddleware, SessionMiddleware, RedirectResponse
-from justbry.domreact import DomReact, Cmp
+from justbry.domreact import DomReact, Cmp as _Cmp
 
+class Cmp(_Cmp): pass
 
 class DomView(DomReact):
+    # pylint: disable=W0201,W0622
+    
+    @staticmethod
+    def icon_text(iconame, icotext):
+        return Cmp('span', classes="icon-text")(
+            Cmp('span', clasess="icon")( Cmp('i', classes=iconame) ),
+            icotext,
+        )
+
+    @staticmethod
+    def input_field(iconname, label, type='text', placeholder='', error=''):
+        cmp = Cmp('div', classes="field")(
+            Cmp('label', classes="label")(label),
+            Cmp('div', classes="control has-icons-left")(
+                Cmp('input', classes="input", type=type, placeholder=placeholder, autocomplete="off"),
+                Cmp('span', classes="icon is-small is-left")(Cmp('i', classes=iconname)),
+                
+            ),
+            Cmp('p', name='error', classes="help is-danger")(_error := Cmp('text', error)),
+        )
+        cmp.error = _error;  # cmp.error.attrs.literal="text"
+        return cmp        
+
+    @staticmethod
+    def button_react(iconname, label, type: "submit | button | reset" = 'button', *, form=None):
+        cmp = Cmp('button', name='react-button', classes="button is-link", type=type)
+        if form is not None:
+            cmp.attrs.form = form
+            
+        cmp.add(
+            Cmp('span', classes="icon is-small")(Cmp('i', classes=iconname)),
+            Cmp('span')(label),        
+        )
+    
+        return cmp
+
+    @DomReact.brython
+    @staticmethod
+    def react_scripts():
+        # pylint: disable=E0401
+        
+        from browser import document
+
+        for b in document.select("button[name^='react-button']"):
+            b.bind('click', lambda ev, btn=b: btn.classList.add("is-loading"))
+
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        cls = type(self)
+        
         self.body.add(
+        
+            Cmp('div', classes="container")(
 
-            Cmp('div')(
-                _info := Cmp('text'),
+                Cmp('div', classes="columns is-justify-content-center")(Cmp('div', classes="column is-two-fifths")(
+                    Cmp('div', classes="message is-link")(
+                        Cmp('div', classes="message-body")(_info := Cmp('text'))
+                    )
+                )),
+                
+                Cmp('div', classes="columns is-justify-content-center")(Cmp('div', classes="column is-two-fifths")(
+                    # onsubmit="return false;" предотвращает авто-перезагрузку браузером страницы после submit
+                    _form := Cmp('form', id='form', classes="box", onsubmit="return false;")(
+                        _login := cls.input_field("fas fa-user", "Login",
+                                                  type='text',
+                                                  placeholder="Enter Login",
+                                                  error=""),
+                        _password := cls.input_field("fas fa-lock", "Password",
+                                                     type='password',
+                                                     placeholder="Enter Password",
+                                                     error=""),
+                        _button := cls.button_react("fas fa-arrow-right", "Submit", type='submit', form='form'),
+                    )
+                )),
             ),
 
-            # onsubmit="return false;" предотвращает авто-перезагрузку браузером страницы после submit
-            _form := Cmp('form', onsubmit="return false;")(
-                Cmp('input', type="text", name="login", value="login"),
-                Cmp('input', type="text", name="password", value="password"),
-
-                # Браузеры по умолчанию после события submit автоматически перезагружают текущую страницу
-                Cmp('input', type="submit", name="submit", value="submit"),  
+            Cmp('script', type="text/python", id='spa')(  # id - имя модуля доступного через import в brython-скриптах
+                cls.react_scripts(),
             ),
         )
 
         self.info = _info
         self.form = _form
+        self.login = _login
+        self.password = _password
+        self.button = _button
 
         self.form.bind('submit', self.submit)
 
     async def submit(self, ev):
-        self.info.attrs.literal = str(ev)
+        login = password = ''
+        for el in ev.get('currentTarget', {}).get('elements', []):
+            if el.get('type') == 'text':
+                login = el.get('value', '').strip()
+            elif el.get('type') == 'password':
+                password = el.get('value', '').strip()
+        
+        self.info.attrs.literal = f"login: {login}<br>password: {password}"
+        self.button.dirty()
+
+        from time import sleep
+        sleep(1.0);  # DB Access Simulate
         
         await self.update()
+
 
     async def response(self, request=None):
         session_id = request and request.session['id']
@@ -58,8 +137,8 @@ app = Justbry(
         # XXX allow_credentials=True не совместим с allow_origins=["*"].
         # Если allow_credentials=True (кукисы и заголовки аутентификации разрешены), то нужно явно указать разрешенные домены
         Middleware(CORSMiddleware,
-                   allow_origins=["http://127.0.0.1", "https://127.0.0.1"],
-                   allow_credentials=True,
+                   allow_origins=["*"],
+                   allow_credentials=False,
                    allow_methods=["*"],
                    allow_headers=["*"]),  
     ],
