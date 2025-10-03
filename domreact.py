@@ -130,7 +130,8 @@ class DomReact(DomMorph):
         
         def _ajax_event(data):
             """
-                XXX Барузеры могут ставить ajax в очередь - используем алгоритм пропихивания события на сервер с прогрессирующим таймаутом
+                XXX Барузеры могут ставить ajax в очередь (например при перезапуске uvicorn с открытыми сессиями)
+                    - используем алгоритм пропихивания события на сервер с прогрессирующим таймаутом
             """
             # event_url = f"{window.location.protocol}//{window.location.hostname}:{window.location.port}{EVENTROUTE}"
             event_url = EVENTROUTE
