@@ -171,8 +171,8 @@ class DomReact(DomMorph):
 
             console.debug(f"Send Event `{ev.type}` from id {ev.currentTarget.id} to: {EVENTROUTE}")
 
-            # return compress(repr(data)).then( _ajax_event );  # Promise
-            compress(repr(data)).then( _ajax_event ); return False
+            return compress(repr(data)).then( _ajax_event );  # Promise
+            # compress(repr(data)).then( _ajax_event ); return False
 
         # На всякий случай начальный пинг для принятия текущих заголовков
         _ajax_event(data="_ping_");  # Символа "_" нету в base64

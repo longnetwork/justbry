@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import random, string
+import random, string, asyncio
 
 
 from justbry import Justbry, Middleware, CORSMiddleware, SessionMiddleware, RedirectResponse
@@ -158,6 +158,8 @@ app = Justbry(
 async def web(request):
     if 'id' not in request.session:
         request.session['id'] = ''.join(random.choice(string.ascii_letters) for i in range(16))
+
+    await asyncio.sleep(2)
 
     return RedirectResponse("/page")
 
