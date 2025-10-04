@@ -122,6 +122,7 @@ class DomView(DomReact):
 
         sleep(0.75)
 
+        # await self.locate("https://github.com/longnetwork/justbry")
         await self.locate("/")
 
     async def response(self, request=None):

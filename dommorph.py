@@ -305,7 +305,7 @@ class DomMorph(DomHtml):
                 
                 console.warn(f"Morpher Close: {morphhash=}")
 
-                if morphhash:
+                if morphhash and not morphhash.startswith('_href_'):
                     # window.location.reload(True)
                     # window.location.assign(window.location.href)
                     window.location.replace(window.location.href)
@@ -321,7 +321,7 @@ class DomMorph(DomHtml):
                     if ev.data.startswith('_href_'):
                         href = ev.data[6:]
                         
-                        morphhash = '';                    # Будет закрытие сокета без  location.replace()
+                        morphhash = '_href_'               # Будет закрытие сокета без  location.replace()
                         
                         window.location.assign(href)
                         return
@@ -340,9 +340,8 @@ class DomMorph(DomHtml):
             # Это необходимо что бы закрытие сокета шло до того как пойдет новый запрос при обновлении страницы
             # (Chromium подглючивает на этом месте: https://issues.chromium.org/issues/40839988)
             def _beforeunload(_ev):
-                global morphhash
+                global morphhash;  # noqa
                 
-                morphhash = ''
                 # if ws.readyState == window.WebSocket.OPEN:
                 if True:
                     ws.close()
