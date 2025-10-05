@@ -73,7 +73,9 @@ class DomView(DomReact):
                 )),
                 
                 Cmp('div', classes="columns is-justify-content-center")(Cmp('div', classes="column is-two-fifths")(
-                    _form := Cmp('form', id='form', classes="box")(
+                    _form := Cmp('form', id='form', classes="box",
+                                 onsubmit="return false;", novalidate=True,
+                                 action="#", method="dialog")(
                         _login := cls.input_field("fas fa-user", "Login",
                                                   type='text',
                                                   placeholder="Enter Login",
