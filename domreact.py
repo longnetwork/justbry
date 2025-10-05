@@ -52,11 +52,9 @@ class DomReact(DomMorph):
 
     @DomMorph.brython
     @staticmethod
-    def react(EVENTROUTE="/"):
+    def react(EVENTROUTE="/", EVENT_START_TIMEOUT=3, EVENT_MAX_TIMEOUT=24):
         """ Модуль извлечения информации о событии и отправки на сервер """
         # pylint: disable=E0401,W0611,W0612,W0621,W0601
-
-        EVENT_START_TIMEOUT = 3; EVENT_MAX_TIMEOUT = 24
 
         # from javascript import JSObject
         from browser import document, window, ajax, console, timer;   # noqa

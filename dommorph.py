@@ -200,7 +200,7 @@ class DomMorph(DomHtml):
             
     @DomHtml.brython
     @staticmethod
-    def morpher(MORPHROUTE="/"):
+    def morpher(MORPHROUTE="/", RELOAD_TIMEOUT=1.5):
         """
             Фронт-энд скрипт в заголовке страницы для наблюдения за изменением Dom и
             динамическим обновлением изменившейся части в реальном времени
@@ -224,7 +224,7 @@ class DomMorph(DomHtml):
 
         from ast import literal_eval
         
-        from browser import console, document, window, websocket
+        from browser import console, document, window, websocket, timer
         from morpher import decompress
 
         if websocket.supported:  # WebSocket supported
@@ -308,7 +308,8 @@ class DomMorph(DomHtml):
                 if morphhash and not morphhash.startswith('_href_'):
                     # window.location.reload(True)
                     # window.location.assign(window.location.href)
-                    window.location.replace(window.location.href)
+                    # window.location.replace(window.location.href)
+                    timer.set_timeout(window.location.replace, int(RELOAD_TIMEOUT * 1000), window.location.href)
 
             def _message(ev):
                 global morphhash
