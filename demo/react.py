@@ -28,7 +28,7 @@ async def homepage(request):
             ),
 
             Cmp('div', classes="box")(
-                frm := Cmp('form')(
+                frm := Cmp('form', onsubmit="return false;")(
                     Cmp('div', classes="field")(Cmp('input', type="input", classes="input", name="login")),
                     Cmp('div', classes="field")(Cmp('input', type="input", classes="input", name="passw")),
                     Cmp('div', classes="control")(Cmp('input', type="submit", classes="button", name="submit")),

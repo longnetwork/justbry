@@ -184,23 +184,30 @@ class ReactEndpoint(HTTPEndpoint):
     reactroute = "/evt/{dom_id}"
 
     doms = weakref.WeakValueDictionary();  # {str(id(dom)): dom, ...} Будет удерживаться пока есть в MorphEndpoint.doms
+
+    headers = {
+        'Content-Type': "text/plain;charset=UTF-8",
+        'Cache-Control': "no-store",  # equivalent to: "private, no-cache, no-store, max-age=0, must-revalidate"
+        'Vary': '*',
+        'Priority': "u=0",
+    }
     
     async def post(self, request):  # XXX put не безопасный для CORS
         
         dom =  self.doms.get(str(request.path_params.get('dom_id')))
         if not dom:
-            return Response(status_code=404);                         # Not Found 
+            return Response(status_code=404, headers=self.headers);                         # Not Found 
             
         try:
 
             request_body = await request.body();  # Строка base64 сжатых байт
 
             if request_body == b'_ping_':
-                return Response(b'_pong_', status_code=202)
+                return Response(b'_pong_', status_code=202, headers=self.headers)
 
             hash_body = hash(request_body)
             if hash_body in dom.evque:            # Срезаем дубликаты
-                return Response(status_code=208);                     # Already Reported
+                return Response(status_code=208, headers=self.headers);                     # Already Reported
 
 
             dom.evque.append(hash_body)
@@ -215,7 +222,7 @@ class ReactEndpoint(HTTPEndpoint):
             currentTarget = str(event.get('currentTarget', {}).get('id'))
 
             handlers = dom.handlers.get(currentTarget)
-            if not handlers: return Response(status_code=422);        # Unprocessable Entity 
+            if not handlers: return Response(status_code=422, headers=self.headers);        # Unprocessable Entity 
 
             event_type = event['type']
 
@@ -237,13 +244,13 @@ class ReactEndpoint(HTTPEndpoint):
                         exc = e
                 
             if not exc:
-                return Response(status_code=202);                     # Accepted
+                return Response(status_code=202, headers=self.headers);                     # Accepted
             else:
-                return Response(status_code=500);                     # Internal Server Error
+                return Response(status_code=500, headers=self.headers);                     # Internal Server Error
             
         except Exception as e:
             if (log := getLogger()): log.exception(e)
-            return Response(status_code=406);                         # Not Acceptable
+            return Response(status_code=406, headers=self.headers);                         # Not Acceptable
             
             
 

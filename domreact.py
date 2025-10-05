@@ -161,7 +161,7 @@ class DomReact(DomMorph):
         def send_event(ev):
             global reactCount
 
-            ev.preventDefault()
+            # ev.preventDefault()
             
             reactCount += 1
             
@@ -170,7 +170,8 @@ class DomReact(DomMorph):
             console.debug(f"Send Event `{ev.type}` from id {ev.currentTarget.id} to: {EVENTROUTE}")
 
             # return compress(repr(data)).then( _ajax_event );  # Promise
-            compress(repr(data)).then( _ajax_event ); return False
+            # compress(repr(data)).then( _ajax_event ); return False
+            compress(repr(data)).then( _ajax_event )
 
         # На всякий случай начальный пинг для принятия текущих заголовков
         _ajax_event(data="_ping_");  # Символа "_" нету в base64

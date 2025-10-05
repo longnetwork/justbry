@@ -305,7 +305,8 @@ class DomMorph(DomHtml):
                 
                 console.warn(f"Morpher Close: {morphhash=}")
 
-                if morphhash and not morphhash.startswith('_href_'):
+                # if morphhash and not morphhash.startswith('_href_'):
+                if not morphhash.startswith('_href_'):
                     # window.location.reload(True)
                     # window.location.assign(window.location.href)
                     # window.location.replace(window.location.href)
