@@ -89,7 +89,7 @@ class DomReact(DomMorph):
             res = {}
             for k in el.__dict__:
                 try:
-                    if k.startswith('_'): continue
+                    if k.startswith('_') or k.startswith('$'): continue
                     if k.isupper(): continue
                     if k in event_props_black_list: continue
                     v = getattr(el, k, None)
