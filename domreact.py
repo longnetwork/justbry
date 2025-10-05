@@ -153,6 +153,11 @@ class DomReact(DomMorph):
                 finally:
                     req.abort()
 
+            if data != "_ping_":
+                # FIXME uvicorn закрывает соединение по --timeout-keep-alive и иногда первый запрос становится в pending.
+                #       Для обхода - первым пихаем пинг, чтобы не ждать EVENT_START_TIMEOUT в этом случае
+                ajax.post( event_url, headers=headers, data="_ping_", timeout=EVENT_START_TIMEOUT )
+
             ajax.post( event_url, headers=headers, data=data, timeout=EVENT_START_TIMEOUT,
                        oncomplete = lambda r, t=EVENT_START_TIMEOUT: _oncomplete(r, t) )
             
