@@ -32,6 +32,11 @@ class DomMorph(DomHtml):
 
         super().__init__(*body_components, static=static, version=version)
 
+        self.headers = {
+            'Cache-Control': "private, no-cache, no-store, max-age=0, must-revalidate",
+            'Pragma': "no-cache",
+            'Expires': "0",
+        }
 
         self.dom_id = str(id(self))
 
@@ -344,8 +349,7 @@ class DomMorph(DomHtml):
             def _beforeunload(_ev):
                 global morphhash;  # noqa
                 
-                # if ws.readyState == window.WebSocket.OPEN:
-                if True:
+                if ws.readyState == window.WebSocket.OPEN:
                     ws.close()
                     
             window.bind('beforeunload', _beforeunload)
@@ -370,7 +374,7 @@ class DomMorph(DomHtml):
 
             if morphhash not in self.responses:
                 self.morphhash.attrs.content = str(morphhash)
-                self.responses[morphhash] = ( body, HTMLResponse(self.render()) )
+                self.responses[morphhash] = ( body, HTMLResponse(self.render(), headers=self.headers) )
             
             return self.responses[morphhash][1];  # HTMLResponse(self.render()) XXX Кешированный рендер
 

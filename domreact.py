@@ -137,8 +137,10 @@ class DomReact(DomMorph):
 
             headers = {
                 'Content-Type': "text/plain;charset=UTF-8",
-                'Cache-Control': "no-store",  # equivalent to: "private, no-cache, no-store, max-age=0, must-revalidate"
-                'Vary': '*',
+                'Cache-Control': "private, no-cache, no-store, max-age=0, must-revalidate",
+                'Pragma': "no-cache",
+                'Expires': "0",
+                # 'Vary': '*',
                 'Priority': "u=0",
             }
 
