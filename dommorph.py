@@ -33,9 +33,9 @@ class DomMorph(DomHtml):
         super().__init__(*body_components, static=static, version=version)
 
         self.headers = {
-            'Cache-Control': "private, no-cache, no-store, max-age=0, must-revalidate",
-            'Pragma': "no-cache",
-            'Expires': "0",
+            # 'Cache-Control': "private, no-cache, no-store, max-age=0, must-revalidate",
+            # 'Pragma': "no-cache",
+            # 'Expires': "0",
         }
 
         self.dom_id = str(id(self))
