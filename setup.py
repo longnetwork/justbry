@@ -6,7 +6,7 @@ from setuptools import setup
 
 setup(
     name='justbry',
-    version='0.1',
+    version='0.2',
     description='Fully Pythonized Framework for Creating React Applications and Services',
     
     author='Steep Pepper',
