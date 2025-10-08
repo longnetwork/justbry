@@ -71,7 +71,7 @@ if __name__ == '__main__':
                                           description="Generate brython_modules.js to Replace brython_stdlib.js",
                                           help=f'pip install brython=="{BRYTHON_VERSION}" required'
                                           )
-    
+
 
     args = parser.parse_args()
 

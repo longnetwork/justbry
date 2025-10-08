@@ -528,6 +528,9 @@ class Cmp(Tag):
     def childs(self):
         return self._childs
 
+    @property
+    def dom(self):
+        return self._get_dom()
 
 
 class DomHtml(Cmp):
@@ -574,7 +577,9 @@ class DomHtml(Cmp):
                 # brylib := Cmp('script', src = static + "brython_modules.js" + (f"?v={version}" if version else "")),
 
                 Cmp('link', rel="stylesheet", href = static + "bulma.min.css" + (f"?v={version}" if version else "")),
+                
                 Cmp('script', defer=True, src = static + "fontawesome_all.js" + (f"?v={version}" if version else "")),
+
                 
                 style := Cmp('style', id='style')("""
                     [data-theme=light],
