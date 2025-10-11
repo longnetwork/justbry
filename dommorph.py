@@ -96,7 +96,7 @@ class DomMorph(DomHtml):
             
             # Текстовая нода и их может быть много в родителе и они не имеют id, - поэтому
             # обновляем через innerHTML родителя. Для оптимизации (индивидуального обновления)
-            # можно и НУЖНО оборачивать такие ноды в "нейтральные" теги (например <div> или <p>)            
+            # можно и НУЖНО оборачивать такие ноды в "нейтральные" теги (например <span>)            
             if cmp != _cmp:
                 _cmp_parent_id = None
                 try: _cmp_parent_id = getattr(_cmp._parent, 'id', None)
@@ -158,8 +158,8 @@ class DomMorph(DomHtml):
                         for c in beforeend:
                             yield 'beforeend', _cmp.id, cmp.id, c.outer()
 
-    @DomHtml.brython
     @staticmethod
+    @DomHtml.brython
     def gzip():
         """
             Стандартные модули brython zlib/gzip работают очень медленно, поэтому используем нативное api браузера
@@ -206,9 +206,8 @@ class DomMorph(DomHtml):
                                 
 
 
-            
-    @DomHtml.brython
     @staticmethod
+    @DomHtml.brython
     def morpher(MORPHROUTE="/", RELOAD_TIMEOUT=1.5):
         """
             Фронт-энд скрипт в заголовке страницы для наблюдения за изменением Dom и

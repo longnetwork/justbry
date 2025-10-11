@@ -46,8 +46,8 @@ class DomView(DomReact):
     
         return cmp
 
-    @DomReact.brython
     @staticmethod
+    @DomReact.brython
     def react_scripts():
         # pylint: disable=E0401
         

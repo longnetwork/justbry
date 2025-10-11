@@ -49,9 +49,8 @@ class DomReact(DomMorph):
         return await super().response(request)
 
 
-
-    @DomMorph.brython
     @staticmethod
+    @DomMorph.brython
     def react(EVENTROUTE="/", EVENT_START_TIMEOUT=3, EVENT_MAX_TIMEOUT=24):
         """ Модуль извлечения информации о событии и отправки на сервер """
         # pylint: disable=E0401,W0611,W0612,W0621,W0601
@@ -184,8 +183,8 @@ class DomReact(DomMorph):
         _ajax_event(data="_ping_");  # Символа "_" нету в base64
         
 
-    @DomMorph.brython
     @staticmethod
+    @DomMorph.brython
     def eventer(ID=None, EVENTTYPE='onload'):
         """ Фронт-энд скрипт привязывающийся к компоненту единственное назначение которого - это слать событие на сервер """
         from react import document, send_event;  # pylint: disable=E0401
