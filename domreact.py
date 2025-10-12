@@ -35,6 +35,10 @@ class DomReact(DomMorph):
                 type(self).react(EVENTROUTE=self.reactroute),  # Может быть перегружен в наследника как статический метод
             ),
             
+            # eventers := Cmp('script', type="text/python", id='eventers')  # Контейнер для всех скриптов DomReact.eventer()           
+        )
+
+        self.html.add(
             eventers := Cmp('script', type="text/python", id='eventers')  # Контейнер для всех скриптов DomReact.eventer()           
         )
 
