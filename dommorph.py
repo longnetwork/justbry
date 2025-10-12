@@ -370,16 +370,19 @@ class DomMorph(DomHtml):
 
         """
         self.morphendpoint.doms[self.dom_id] = self
-
+        
         async with self.alock:
 
-            body = deepcopy(self.body); morphhash = hash(body)
+            # Рендер нужно делать первым из-за возможных интеграций виджетов
+            render = HTMLResponse(self.render(), headers=self.headers)
+
+            morphhash = hash(self.body)
 
             if morphhash not in self.responses:
-                self.morphhash.attrs.content = str(morphhash)
-                self.responses[morphhash] = ( body, HTMLResponse(self.render(), headers=self.headers) )
+                self.morphhash.attrs.content = str(morphhash); render = HTMLResponse(self.render(), headers=self.headers)
+                self.responses[morphhash] = deepcopy(self.body)
             
-            return self.responses[morphhash][1];  # HTMLResponse(self.render()) XXX Кешированный рендер
+            return render
 
     async def update(self):
 
