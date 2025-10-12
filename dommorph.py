@@ -373,16 +373,22 @@ class DomMorph(DomHtml):
         
         async with self.alock:
 
-            # Рендер нужно делать первым из-за возможных интеграций виджетов
-            render = HTMLResponse(self.render(), headers=self.headers)
-
             morphhash = hash(self.body)
+            # Даже если интеграции виджетов при первом рендере изменят morphhash, то это ни на что не влияет,
+            # так как morphhash фиксируется для связи с сервером а фактический морфинг определяется действительными
+            # изменениями в body
 
             if morphhash not in self.responses:
-                self.morphhash.attrs.content = str(morphhash); render = HTMLResponse(self.render(), headers=self.headers)
-                self.responses[morphhash] = deepcopy(self.body)
+                self.morphhash.attrs.content = str(morphhash)
+                
+                render = self.render()
+                
+                self.responses[morphhash] = deepcopy(self.body);  # Фактическое body после первого рендера
+                
+            else:
+                render = self.render()
             
-            return render
+            return HTMLResponse(render, headers=self.headers)
 
     async def update(self):
 
