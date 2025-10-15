@@ -114,17 +114,12 @@ class DomReact(DomMorph):
 
         def event_to_dict(ev):
             ct = ev.currentTarget
-            tt = ev.target
-            
-            
+        
             result = {}
             
             result.update(_event_props_to_dict(ev))
 
             currentTarget = result['currentTarget'] = {}; currentTarget.update(_event_props_to_dict(ct))
-
-            if ct.id != tt.id:
-                target = result['target'] = {};           target.update(_event_props_to_dict(tt))
             
             return result
 
