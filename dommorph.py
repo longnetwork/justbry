@@ -171,7 +171,6 @@ class DomMorph(DomHtml):
         """
         # pylint: disable=E0401,W0612
 
-
         from browser import window
         
         (String, TextEncoder, TextDecoder, 

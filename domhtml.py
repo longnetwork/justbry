@@ -420,18 +420,30 @@ class Cmp(Tag):
         self._childs.insert(idx, c := self._to_component(cmp)); c._parent = weakref.proxy(self)
 
         
-    def render(self, tabs=''):
+    # ~ def render(self, tabs=''):
+        
+        # ~ parts = [self.otag + '\n']
+
+        # ~ for c in self._childs:
+            # ~ parts.append(c.render('' + '\t'))
+    
+        # ~ if (c := self.ctag):
+            # ~ parts.append(c + '\n')
+        
+        # ~ return tw.indent(''.join(parts), tabs)
+
+    def render(self):
         
         parts = [self.otag + '\n']
 
         for c in self._childs:
-            parts.append(c.render('' + '\t'))
+            parts.append(c.render())
     
         if (c := self.ctag):
             parts.append(c + '\n')
         
-        return tw.indent(''.join(parts), tabs)
-        
+        return ''.join(parts)
+
 
     def _render(self):
         """
@@ -631,7 +643,7 @@ class DomHtml(Cmp):
                 
         """
         def __new__(cls, func):
-            
+
             def wrap(*args, **kwargs):
 
                 parameters = inspect.signature(func).parameters; empty = inspect._empty
