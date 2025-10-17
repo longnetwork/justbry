@@ -23,12 +23,15 @@ long_line_behaviour=1
 long_line_column=72
 
 [files]
-current_page=4
+current_page=7
 FILE_NAME_0=24587;Python;0;EUTF-8;0;1;0;%2Fhome%2Fmint%2FWork%2Fjustbry%2Fdomhtml.py;0;4
 FILE_NAME_1=9886;Python;0;EUTF-8;0;1;0;%2Fhome%2Fmint%2FWork%2Fjustbry%2Fdommorph.py;0;4
 FILE_NAME_2=3574;Python;0;EUTF-8;0;1;0;%2Fhome%2Fmint%2FWork%2Fjustbry%2Fdomreact.py;0;4
 FILE_NAME_3=5482;Python;0;EUTF-8;0;1;0;%2Fhome%2Fmint%2FWork%2Fjustbry%2F__init__.py;0;4
-FILE_NAME_4=0;Markdown;0;EUTF-8;0;1;0;%2Fhome%2Fmint%2FWork%2Fjustbry%2FDEV.md;0;4
+FILE_NAME_4=1351;Markdown;0;EUTF-8;0;1;0;%2Fhome%2Fmint%2FWork%2Fjustbry%2FDEV.md;0;4
+FILE_NAME_5=4613;Python;0;EUTF-8;0;1;0;%2Fhome%2Fmint%2FWork%2Fjustbry%2Fdemo%2Fcorsess.py;0;4
+FILE_NAME_6=1194;Python;0;EUTF-8;0;1;0;%2Fhome%2Fmint%2FWork%2Fjustbry%2Fdemo%2Fdom.py;0;4
+FILE_NAME_7=0;Markdown;0;EUTF-8;0;1;0;%2Fhome%2Fmint%2FWork%2Fjustbry%2FREADME.md;0;4
 
 [VTE]
 last_dir=/home/mint/Work/justbry

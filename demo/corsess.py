@@ -110,18 +110,18 @@ class DomView(DomReact):
                 password = el.get('value', '').strip()
 
         # DB Access Simulate
-        from time import sleep
+        
         for c in "⓵⓶⓷✌":
             self.info.attrs.literal = c
             await self.update()
-            sleep(0.75)
+            await asyncio.sleep(0.75)
         
         self.info.attrs.literal = f"login: {login}<br>password: {password}"
         self.button.dirty()
         
         await self.update()
 
-        sleep(0.75)
+        await asyncio.sleep(0.75)
 
         # await self.locate("https://github.com/longnetwork/justbry")
         await self.locate("/")
