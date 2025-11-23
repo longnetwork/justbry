@@ -81,6 +81,8 @@ class DomReact(DomMorph):
             'method',
 
             'className',
+
+            'timeStamp',
         }
 
         event_props_while_list = {
@@ -171,6 +173,13 @@ class DomReact(DomMorph):
             reactCount += 1
             
             data = event_to_dict(ev); data['reactCount'] = reactCount
+
+            now = window.Date.new()
+
+            data['timeStamp'] = now.getTime() / 1000;         # sec
+            data['tzOffset'] = now.getTimezoneOffset() * 60;  # sec
+            data['language'] = window.navigator.language
+            
 
             console.debug(f"Send Event `{ev.type}` from id {ev.currentTarget.id} to: {EVENTROUTE}")
 
