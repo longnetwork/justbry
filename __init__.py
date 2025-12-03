@@ -143,7 +143,7 @@ class MorphEndpoint(WebSocketEndpoint):
             async with dom.alock:
                 morphhash = int(data)
                 if morphhash in dom.responses:
-                    body = dom.responses[morphhash]
+                    body = dom.responses[morphhash][0]
                     dom.morphsockets[websocket] = (body, morphhash);  # Теперь dom может сам себя обновлять на стороне браузера
                     
                     # await websocket.send_text(data);                # _pong_

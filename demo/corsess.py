@@ -166,6 +166,11 @@ async def web(request):
 
 @app.route('/page')
 async def page(request):
+
+    dom = DomView()
+
+    print(f"morphhash={hash(dom.body)}, dom_id={dom.dom_id}")
+    
     return await DomView().response(request)
  
 

@@ -165,7 +165,7 @@ class DomMorph(DomHtml):
             Стандартные модули brython zlib/gzip работают очень медленно, поэтому используем нативное api браузера
             ( базовые примеры: https://gist.github.com/Explosion-Scratch/357c2eebd8254f8ea5548b0e6ac7a61b )
 
-            TODO: Когда появится фикс позволяющий отправлять bytes через browser.json, тогда слой
+            TODO: Когда появится фикс позволяющий отправлять bytes через browser.ajax, тогда слой
                   кодирования base64 можно будет исключить
                   Уже появился!
         """
@@ -381,11 +381,12 @@ class DomMorph(DomHtml):
                 self.morphhash.attrs.content = str(morphhash)
                 
                 render = self.render()
-                
-                self.responses[morphhash] = deepcopy(self.body);  # Фактическое body после первого рендера
+
+                # Фактическое body после первого рендера
+                self.responses[morphhash] = ( deepcopy(self.body), render )
                 
             else:
-                render = self.render()
+                render = self.responses[morphhash][1];  # XXX Кешированный рендер
             
             return HTMLResponse(render, headers=self.headers)
 
