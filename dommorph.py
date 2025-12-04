@@ -229,7 +229,7 @@ class DomMorph(DomHtml):
         """
         # pylint: disable=E0401,W0601,W0602
 
-        from ast import literal_eval
+        # from ast import literal_eval
         
         from browser import console, document, window, websocket, timer
         from morpher import decompress
@@ -243,7 +243,7 @@ class DomMorph(DomHtml):
 
                 if not morphhash: return
 
-                if isinstance(data, str): data = literal_eval(data);  # До 2-х раз медленнее eval но безопасней
+                if isinstance(data, str): data = eval(data);  # FIXME literal_eval Багованный (всерает ковычки лишними escap-ами \\)
 
                 if not data: return
                 
