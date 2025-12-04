@@ -257,6 +257,8 @@ class DomMorph(DomHtml):
                             el = document.getElementById(str(_id))
                             if el:
                                 el.innerHTML = innerHTML
+                                if el.tagName in {'TEXTAREA', 'INPUT', 'SELECT', 'textarea', 'input', 'select'}:  # Интерактивные элементы модифицируются через value
+                                    el.value = innerHTML
                                 if id is not None and id != _id:
                                     el.id = str(id)
                         case "attrs", _id, id, dict(attrs) if _id is not None:
