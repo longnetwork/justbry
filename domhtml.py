@@ -341,8 +341,8 @@ class Cmp(Tag):
         """
         if not callable(literal):
             if isinstance(literal, str):
-                # return tw.dedent(literal.strip('\r\n'))
-                return literal
+                return tw.dedent(literal.strip('\r\n'))
+                # return literal
             else:
                 return literal
 
@@ -350,8 +350,7 @@ class Cmp(Tag):
         
         is_lambda = literal.__name__ == "<lambda>"
         if is_lambda:  # Лямбду нужно запихивать как декларацию и тут-же вызывать
-            source = source.strip('\r\n')
-            return f"({tw.dedent(source)})()"
+            source = source.strip('\r\n'); return f"({tw.dedent(source)})()"
             
         # Берем только тело
         
