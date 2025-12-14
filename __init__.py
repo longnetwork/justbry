@@ -36,7 +36,7 @@ from starlette.endpoints import (
     HTTPEndpoint, WebSocketEndpoint, 
 )
 
-from starlette.websockets import WebSocketState;                           # noqa
+from starlette.websockets import WebSocketState, WebSocketDisconnect;      # noqa
 
 
 from starlette.background import BackgroundTask, BackgroundTasks;          # noqa
