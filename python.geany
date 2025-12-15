@@ -23,7 +23,7 @@ long_line_behaviour=1
 long_line_column=72
 
 [files]
-current_page=2
+current_page=13
 FILE_NAME_0=1273;Markdown;0;EUTF-8;0;1;0;%2Fhome%2Fmint%2FWork%2Fjustbry%2FDEV.md;0;4
 FILE_NAME_1=14593;Python;0;EUTF-8;0;1;0;%2Fhome%2Fmint%2FWork%2Fjustbry%2Fdommorph.py;0;4
 FILE_NAME_2=1383;Python;0;EUTF-8;0;1;0;%2Fhome%2Fmint%2FWork%2Fjustbry%2F__init__.py;0;4
@@ -37,9 +37,10 @@ FILE_NAME_9=12498;Python;0;EUTF-8;0;1;0;%2Fhome%2Fmint%2FWork%2Fjustbry%2Fdomhtm
 FILE_NAME_10=2011;Python;0;EUTF-8;0;1;0;%2Fhome%2Fmint%2FWork%2Fjustbry%2Fdemo%2Fbulma.py;0;4
 FILE_NAME_11=670;Python;0;EUTF-8;0;1;0;%2Fhome%2Fmint%2FWork%2Fjustbry%2Fdemo%2Fasync.py;0;4
 FILE_NAME_12=1022;Python;0;EUTF-8;0;1;0;%2Fhome%2Fmint%2FWork%2Fjustbry%2F.venv%2Flib%2Fpython3.11%2Fsite-packages%2Fstarlette%2Fwebsockets.py;0;4
+FILE_NAME_13=2007;Python;0;EUTF-8;0;1;0;%2Fhome%2Fmint%2FWork%2Fjustbry%2Fdemo%2Fdom.py;0;4
 
 [VTE]
-last_dir=/home/mint/Work/justbry
+last_dir=/home/mint/Work/justbry/demo
 
 [editor]
 line_wrapping=false

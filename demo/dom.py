@@ -59,16 +59,18 @@ dom.body.add(  # Инжекция Brython-консоли
     
     Cmp('style')("""
         #interpreter {
-            display: grid;
-            // margin: 1rem;
             border: 3px solid #ccc;
+            background: black;
+            min-height: 50vh;
         }
-        #interpreter > pre {
+        #interpreter pre {
             padding: 0;
             color: white;
             background: black;
+            display: inline;
         }
     """),
+
 
     Cmp('div', id='interpreter', contenteditable=True)(
         Cmp('script', type="text/python")("""
