@@ -121,7 +121,9 @@ class DomReact(DomMorph):
             
             result.update(_event_props_to_dict(ev))
 
-            currentTarget = result['currentTarget'] = {}; currentTarget.update(_event_props_to_dict(ct))
+            currentTarget = result['currentTarget'] = {}
+            currentTarget.update(_event_props_to_dict(ct))
+            currentTarget.update((a.name, a.value) for a in ct.attributes if a.name.startswith('data-'))
             
             return result
 
