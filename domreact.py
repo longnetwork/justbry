@@ -57,73 +57,100 @@ class DomReact(DomMorph):
     @DomMorph.brython
     def react(EVENTROUTE="/", EVENT_START_TIMEOUT=3, EVENT_MAX_TIMEOUT=24):
         """ Модуль извлечения информации о событии и отправки на сервер """
-        # pylint: disable=E0401,W0611,W0612,W0621,W0601
+        # pylint: disable=E0401,W0611,W0612,W0621,W0601,R0204
 
-        # from javascript import JSObject
-        from browser import document, window, ajax, console, timer;   # noqa
+        from browser import document, window, ajax, console, timer, DOMEvent, DOMNode;   # noqa
         from morpher import compress
 
-        event_props_black_list = {
-            # FIXME Определиться с полным списком не нужного для оптимизации
-            'baseURI',
-            'namespaceURI',
-            'innerHTML',
-            'innerText',
-            'outerHTML',
-            'outerText',
-            'textContent',
-            'formAction',
-            'action',
-            'valueAsNumber',
-            
-            'enctype',
-            'encoding',
-            'method',
-
-            'className',
-
+        props_white_list = {  # FIXME Определиться с точным списком без не нужного
+            'type', 'currentTarget',  # 'target',
             'timeStamp',
-        }
+            'bubbles',
+            'cancelable',
+            'detail',
+            'isTrusted',
+            'eventPhase',
+            'pointerType',
 
-        event_props_while_list = {
-            # FIXME Определиться с полным списком нужного для оптимизации
+            'button',
+            'clientX', 'clientY', 'pageX', 'pageY',
+            'screenX', 'screenY',
+            'altKey', 'ctrlKey', 'metaKey', 'shiftKey',
+            'key', 'code', 'repeat', 'inputType',
+            'id', 'tagName', 'name', 'className',  # 'classList',
+            'value', 'checked', 'files', 'selectedIndex',
+            # 'innerText', 'textContent',
+
+            'offsetLeft', 'offsetTop',
+            'offsetWidth', 'offsetHeight',
+
+            'force', 'identifier',
+            'radiusX', 'radiusY',
+            'rotationAngle',
+            'tiltX', 'tiltY', 'pressure',
+
+            # 'action',
+            # 'method',
+            # 'encoding',
+            # 'noValidate',
+            
+            'multiple', 'selectedOptions',
+
+            'getBoundingClientRect', 'top', 'left', 'width', 'height',
+            
+            # 'validity', 'valid',
+            'touches', 'changedTouches',
+            # 'dataset',
             'elements',  # HTMLFormControlsCollection
         }
         
-        def _event_props_to_dict(el):
+        def _props_to_dict(obj):
             res = {}
-            for k in el.__dict__:
-                try:
-                    if k.startswith('_') or k.startswith('$'): continue
-                    if k.isdigit() or k.isupper(): continue
-                    if k in event_props_black_list: continue
-                    v = getattr(el, k, None)
-                except:
-                    continue
-                
-                # Оптимизация (пустое не шлем)
-                
-                if isinstance(v, (str, bool, int, float)):
-                    if v: res[k] = v
-                elif k in event_props_while_list:
-                    try:
-                        controls = list(v);  # Итерируемый объект
-                        if controls:
-                            res[k] = [ _event_props_to_dict(cl) for cl in controls]
-                    except:
-                        pass
+            if isinstance(obj, (DOMEvent, DOMNode)):
+                for k in props_white_list:
+                    v = getattr(obj, k, None)
+                    if v:
+
+                        if isinstance(v, (bool, int, float, str, bytes)):
+                            res[k] = v
+                            
+                            continue
+                            
+                        if isinstance(v, (DOMEvent, DOMNode)):
+                            v = _props_to_dict(v)
+                            if v: res[k] = v
+                            
+                            continue
+
+                        if callable(v):
+                            try:
+                                v = _props_to_dict(v())
+                                if v: res[k] = v
+                            except:
+                                pass
+
+                            continue
+                            
+                        # Если итерируемый объект
+                        try:
+                            v = list(v)
+                            v = [ r for _ in v if (r := _props_to_dict(_)) ]
+                            if v: res[k] = v
+                        except:
+                            pass
+
+                    
             return res
+
 
         def event_to_dict(ev):
             ct = ev.currentTarget
         
             result = {}
             
-            result.update(_event_props_to_dict(ev))
+            result.update(_props_to_dict(ev))
 
-            currentTarget = result['currentTarget'] = {}
-            currentTarget.update(_event_props_to_dict(ct))
-            currentTarget.update((a.name, a.value) for a in ct.attributes if a.name.startswith('data-'))
+            result.setdefault('currentTarget', {}).update((a.name, a.value) for a in ct.attributes if a.name.startswith('data-'))
             
             return result
 
@@ -169,8 +196,10 @@ class DomReact(DomMorph):
 
         def send_event(ev):
             global reactCount
-
+            
             # ev.preventDefault()
+
+            # console.time("geteventprops")
             
             reactCount += 1
             
@@ -178,10 +207,11 @@ class DomReact(DomMorph):
 
             now = window.Date.new()
 
-            data['timeStamp'] = now.getTime() / 1000;         # sec
-            data['tzOffset'] = now.getTimezoneOffset() * 60;  # sec
+            data['timestamp'] = now.getTime() / 1000;         # sec
+            data['tzoffset'] = now.getTimezoneOffset() * 60;  # sec
             data['language'] = window.navigator.language
             
+            # console.timeEnd("geteventprops")
 
             console.debug(f"Send Event `{ev.type}` from id {ev.currentTarget.id} to: {EVENTROUTE}")
 

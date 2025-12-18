@@ -13,22 +13,23 @@ async def homepage(request):
     dom = DomReact(
         Cmp('div', classes="box")(
             Cmp('div', classes="grid")(
-                Cmp('div', classes="cell")(btn := Cmp('button', classes="button is-primary mb-4")("Click")),
-                Cmp('div', classes="cell")(anh := Cmp('a', classes="button is-primary mb-4")("Anchor")),                
-                Cmp('div', classes="cell")(chk := Cmp('input', type="checkbox")("Checkbox")),
+                Cmp('div', classes="cell")(btn := Cmp('button', classes="button is-primary mb-4", data_payload='payload')("Click")),
+                Cmp('div', classes="cell")(anh := Cmp('a', classes="button is-primary mb-4", data_payload='payload')("Anchor")),                
+                Cmp('div', classes="cell")(chk := Cmp('input', type="checkbox", data_payload='payload')("Checkbox")),
                 Cmp('div', classes="cell")(
                     Cmp('div', classes="select")(
-                        sel := Cmp('select')(
+                        sel := Cmp('select', data_payload='payload')(
                             Cmp('option')("option1"),
                             Cmp('option')("option2"),
                         )
                     )
                 ),
-                Cmp('div', classes="cell")(inp := Cmp('input', type="input", classes="input", placeholder="Text")),
+                Cmp('div', classes="cell")(inp := Cmp('input', type="input", classes="input", placeholder="Text", data_payload=True)),
+                Cmp('div', classes="cell")(kbd := Cmp('input', type="input", classes="input", placeholder="Keys", data_payload=True)),
             ),
 
             Cmp('div', classes="box")(
-                frm := Cmp('form', onsubmit="return false;")(
+                frm := Cmp('form', onsubmit="return false;", data_payload='payload')(
                     Cmp('div', classes="field")(Cmp('input', type="input", classes="input", name="login")),
                     Cmp('div', classes="field")(Cmp('input', type="input", classes="input", name="passw")),
                     Cmp('div', classes="control")(Cmp('input', type="submit", classes="button", name="submit")),
@@ -58,6 +59,7 @@ async def homepage(request):
     sel.bind('click', update_info)
 
     inp.bind('input', update_info)
+    kbd.bind('keypress', update_info)
     
     # frm.bind('mouseover', update_info)
     
