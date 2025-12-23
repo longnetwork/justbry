@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=E0401,W0123
 
-from ast import literal_eval
+# from ast import literal_eval
+
+from javascript import JSON
 
 from browser.session_storage import storage as _s
 
@@ -20,18 +22,21 @@ class G(metaclass=GMeta):                     # Глобальное Храни�
 
 class _S:
     def __setattr__(self, name, value):
-        _s[name] = repr(value)
+        _s[name] = JSON.stringify(value)
     def __getattribute__(self, name):
         val = _s.get(name)
         if val is None: return None
-        return literal_eval(val)
+        return JSON.parse(val)
 S = _S();                                     # Хранилище переменных в sessionStorage браузера
 
 class _L:
     def __setattr__(self, name, value):
-        _l[name] = repr(value)
+        _l[name] = JSON.stringify(value)
     def __getattribute__(self, name):
         val = _l.get(name)
         if val is None: return None
-        return literal_eval(val)
+        return JSON.parse(val)
 L = _L();                                     # Хранилище переменных в localStorage браузера
+
+
+

@@ -4,7 +4,9 @@
 """
 
 import re, weakref, gzip, base64, inspect, logging
-from ast import literal_eval
+# from ast import literal_eval
+import json
+
 import asyncio
 
 import warnings
@@ -222,7 +224,8 @@ class ReactEndpoint(HTTPEndpoint):
 
             if (log := getLogger()): log.debug(f"event: {data}")
             
-            event = literal_eval(data.decode('utf-8'))
+            # event = literal_eval(data.decode('utf-8'))
+            event = json.loads(data.decode('utf-8'))
 
             currentTarget = str(event.get('currentTarget', {}).get('id'))
 

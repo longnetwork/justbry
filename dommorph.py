@@ -6,7 +6,7 @@
 # pylint: disable=W0621,W0123,W0622
 
 
-import asyncio, base64, gzip
+import asyncio, base64, gzip, json
 
 from copy import deepcopy
 
@@ -224,13 +224,13 @@ class DomMorph(DomHtml):
 
 
             Соглашение по данным в сокетах:
-                - преобразуемые в объекты через ast.literal_eval(repr(...)) строки
+                - преобразуемые в объекты через ast.literal_eval(repr(...)) (или json) строки
             
         """
         # pylint: disable=E0401,W0601,W0602
 
         # from ast import literal_eval
-        
+        from javascript import JSON
         from browser import console, document, window, websocket, timer
         from morpher import decompress
 
@@ -243,7 +243,7 @@ class DomMorph(DomHtml):
 
                 if not morphhash: return
 
-                if isinstance(data, str): data = eval(data);  # FIXME literal_eval Багованный (всерает ковычки лишними escap-ами \\)
+                if isinstance(data, str): data = JSON.parse(data);  # FIXME literal_eval Багованный (всерает ковычки лишними escap-ами \\)
 
                 if not data: return
                 
@@ -407,7 +407,7 @@ class DomMorph(DomHtml):
                     
                     diffs = list(self.compare_dom(body, _body))
                     if diffs:                        
-                        updates.append(socket.send_text( base64.b64encode(gzip.compress(repr(diffs).encode())).decode() ))
+                        updates.append(socket.send_text( base64.b64encode(gzip.compress(json.dumps(diffs).encode())).decode() ))
                         _body = body
                     # morphhash менять нельзя, чтобы работала очистка self.responses при закрытии сокета
                     # То есть morphhash - это первый хешь при первой отдачи response на сторону браузера

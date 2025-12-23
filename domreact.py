@@ -59,8 +59,10 @@ class DomReact(DomMorph):
         """ Модуль извлечения информации о событии и отправки на сервер """
         # pylint: disable=E0401,W0611,W0612,W0621,W0601,R0204
 
-        from browser import document, window, ajax, console, timer, DOMEvent, DOMNode;   # noqa
+        from javascript import JSON
+        from browser import document, window, ajax, console, timer, DOMEvent, DOMNode
         from morpher import compress
+        
 
         props_white_list = {  # FIXME Определиться с точным списком без не нужного
             'type', 'currentTarget',  # 'target',
@@ -215,9 +217,9 @@ class DomReact(DomMorph):
 
             console.debug(f"Send Event `{ev.type}` from id {ev.currentTarget.id} to: {EVENTROUTE}")
 
-            # return compress(repr(data)).then( _ajax_event );  # Promise
-            # compress(repr(data)).then( _ajax_event ); return False
-            compress(repr(data)).then( _ajax_event )
+            # return compress(JSON.stringify(data)).then( _ajax_event );  # Promise
+            # compress(JSON.stringify(data)).then( _ajax_event ); return False
+            compress(JSON.stringify(data)).then( _ajax_event )
 
         # На всякий случай начальный пинг для принятия текущих заголовков
         _ajax_event(data="_ping_");  # Символа "_" нету в base64
