@@ -562,13 +562,15 @@ class DomHtml(Cmp):
                 onload="brython({debug: 0, cache: false, pythonpath: ['py']})"
                 
     """
-    def __init__(self, /, *body_components, static="/", version=None):
+    def __init__(self, /, *body_components, static="/", version=None, **kwargs):
         """
             Если `version` не задана то динамические импорты brython-а будут при каждом обновлении страницы
             ( cache: false )
         """
 
         version = str(version) if version is not None else version
+        
+        brydefer = kwargs.get('brydefer', True)
         
         super().__init__('!DOCTYPE', "html")
 
@@ -583,13 +585,13 @@ class DomHtml(Cmp):
 
                 Cmp('meta', name="version", content=f"{version}" if version else ""),
 
-                Cmp('script', src = static + "brython.min.js" + (f"?v={version}" if version else "")),
-                brylib := Cmp('script', src = static + "brython_stdlib.min.js" + (f"?v={version}" if version else "")),
-                # brylib := Cmp('script', src = static + "brython_modules.js" + (f"?v={version}" if version else "")),
+                Cmp('script', src = static + "brython.min.js" + (f"?v={version}" if version else ""), defer=brydefer),
+                brylib := Cmp('script', src = static + "brython_stdlib.min.js" + (f"?v={version}" if version else ""), defer=brydefer),
+                # brylib := Cmp('script', src = static + "brython_modules.js" + (f"?v={version}" if version else ""), defer=brydefer),
 
                 Cmp('link', rel="stylesheet", href = static + "bulma.min.css" + (f"?v={version}" if version else "")),
                 
-                Cmp('script', defer=True, src = static + "fontawesome_all.js" + (f"?v={version}" if version else "")),
+                Cmp('script', src = static + "fontawesome_all.js" + (f"?v={version}" if version else ""), defer=True),
 
                 
                 style := Cmp('style', id='style')("""

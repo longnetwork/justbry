@@ -28,9 +28,9 @@ class DomMorph(DomHtml):
     morphendpoint = MorphEndpoint;  # Один маршрут сокета с параметром на все dom
 
 
-    def __init__(self, /, *body_components, static="/", version=None):
+    def __init__(self, /, *body_components, static="/", version=None, **kwargs):
 
-        super().__init__(*body_components, static=static, version=version)
+        super().__init__(*body_components, static=static, version=version, **kwargs)
 
         self.headers = {
             # 'Cache-Control': "private, no-cache, no-store, max-age=0, must-revalidate",

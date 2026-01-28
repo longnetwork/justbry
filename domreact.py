@@ -21,8 +21,8 @@ class DomReact(DomMorph):
     reactendpoint = ReactEndpoint;  # Один маршрут с параметром на все dom
 
     
-    def __init__(self, /, *body_components, static="/", version=None):
-        super().__init__(*body_components, static=static, version=version)
+    def __init__(self, /, *body_components, static="/", version=None, **kwargs):
+        super().__init__(*body_components, static=static, version=version, **kwargs)
 
 
         baseroute = self.reactendpoint.reactroute.rsplit('/', 1)[0] or "/evt"
