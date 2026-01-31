@@ -341,7 +341,7 @@ class DomMorph(DomHtml):
                         
 
                 except Exception as e:
-                    console.error(f"Dom Morphing: {e}")
+                    console.error("Dom Morphing:", e)
 
         
             ws.bind('open', _open)
