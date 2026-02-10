@@ -32,9 +32,18 @@ async def homepage(request):
                 frm := Cmp('form', onsubmit="return false;", data_payload='payload')(
                     Cmp('div', classes="field")(Cmp('input', type="input", classes="input", name="login")),
                     Cmp('div', classes="field")(Cmp('input', type="input", classes="input", name="passw")),
-                    Cmp('div', classes="control")(Cmp('input', type="submit", classes="button", name="submit")),
+
+                    Cmp('div', classes="field is-grouped")(
+                        Cmp('p', classes="control is-expanded")(
+                            Cmp('input', classes="button input", type="file", name="file")
+                        ),
+                        Cmp('p', classes="control")(
+                            Cmp('input', type="submit", classes="button", name="submit")
+                        ),
+                    )
                 )
             ),
+
             
             Cmp('textarea', classes="textarea", readonly=True, rows="20",)(
                 info := Cmp('text')
