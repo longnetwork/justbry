@@ -29,13 +29,13 @@ async def homepage(request):
             ),
 
             Cmp('div', classes="box")(
-                frm := Cmp('form', onsubmit="return false;", data_payload='payload')(
+                frm := Cmp('form', onsubmit="return false;", data_payload='payload', name='form')(
                     Cmp('div', classes="field")(Cmp('input', type="input", classes="input", name="login")),
                     Cmp('div', classes="field")(Cmp('input', type="input", classes="input", name="passw")),
 
                     Cmp('div', classes="field is-grouped")(
                         Cmp('p', classes="control is-expanded")(
-                            Cmp('input', classes="button input", type="file", name="file")
+                            Cmp('input', classes="button input", type="file", name="file", multiple=True)
                         ),
                         Cmp('p', classes="control")(
                             Cmp('input', type="submit", classes="button", name="submit")
@@ -51,6 +51,7 @@ async def homepage(request):
             
         )
     )
+
 
     async def update_info(ev):
         info.attrs.literal = str(ev)

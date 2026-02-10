@@ -65,7 +65,7 @@ class DomReact(DomMorph):
         
 
         props_white_list = {  # FIXME Определиться с точным списком без не нужного
-            'type', 'currentTarget',  # 'target',
+            'currentTarget',  # 'target',
             'timeStamp',
             'bubbles',
             'cancelable',
@@ -79,8 +79,8 @@ class DomReact(DomMorph):
             'screenX', 'screenY',
             'altKey', 'ctrlKey', 'metaKey', 'shiftKey',
             'key', 'code', 'repeat', 'inputType',
-            'id', 'tagName', 'name', 'className',  # 'classList',
-            'value', 'checked', 'files', 'selectedIndex',
+            'id', 'tagName', 'className',  # 'classList',
+            'value', 'checked', 'selectedIndex',
             # 'innerText', 'textContent',
 
             'offsetLeft', 'offsetTop',
@@ -104,11 +104,14 @@ class DomReact(DomMorph):
             'touches', 'changedTouches',
             # 'dataset',
             'elements',  # HTMLFormControlsCollection
+
+            'files', 'name', 'type', 'size', 'lastModified',
         }
         
         def _props_to_dict(obj):
             res = {}
-            if isinstance(obj, (DOMEvent, DOMNode)):
+            # if isinstance(obj, (DOMEvent, DOMNode)):
+            if True:
                 for k in props_white_list:
                     v = getattr(obj, k, None)
                     if v:

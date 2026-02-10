@@ -52,9 +52,8 @@ class DomMorph(DomHtml):
                 # type(self).gzip,                              # Утилиты компрессии доступны через import morpher
                 # DomHtml.brython(type(self).gzip)(),           # Эквивалент
                 type(self).gzip(),                              # Эквивалент если DomMorph.gzip отдекорирована через @DomHtml.brython
-                
                 type(self).morpher(MORPHROUTE=self.morphroute),  # Может быть перегружен в наследника как статический метод
-            )           
+            )
         )
 
         self.morphhash = morphhash;  # self.morphhash.attrs.content = str(hash(self.body)) при response
