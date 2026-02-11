@@ -61,7 +61,7 @@ class DomReact(DomMorph):
 
         from javascript import JSON
         from browser import document, window, ajax, console, timer, DOMEvent, DOMNode
-        from morpher import compress
+        from morpher import compress, toBase64
         
 
         props_white_list = {  # FIXME Определиться с точным списком без не нужного
@@ -105,10 +105,10 @@ class DomReact(DomMorph):
             # 'dataset',
             'elements',  # HTMLFormControlsCollection
 
-            'files', 'name', 'type', 'size', 'lastModified',
+            'files', 'name', 'type', 'size', 'lastModified', 'arrayBuffer'
         }
         
-        def _props_to_dict(obj):
+        def _props_to_dict(obj, promises):
             res = {}
             # if isinstance(obj, (DOMEvent, DOMNode)):
             if True:
@@ -122,15 +122,21 @@ class DomReact(DomMorph):
                             continue
                             
                         if isinstance(v, (DOMEvent, DOMNode)):
-                            v = _props_to_dict(v)
+                            v = _props_to_dict(v, promises)
                             if v: res[k] = v
                             
                             continue
 
                         if callable(v):
                             try:
-                                v = _props_to_dict(v())
-                                if v: res[k] = v
+                                if k == 'arrayBuffer':
+                                    v = v();  # Promise
+                                    promises.append(
+                                        v.then(lambda data, res=res, k=k: res.update([(k, toBase64(data))]))
+                                    )
+                                else:
+                                    v = _props_to_dict(v(), promises)
+                                    if v: res[k] = v
                             except:
                                 pass
 
@@ -139,7 +145,7 @@ class DomReact(DomMorph):
                         # Если итерируемый объект
                         try:
                             v = list(v)
-                            v = [ r for _ in v if (r := _props_to_dict(_)) ]
+                            v = [ r for _ in v if (r := _props_to_dict(_, promises)) ]
                             if v: res[k] = v
                         except:
                             pass
@@ -148,15 +154,15 @@ class DomReact(DomMorph):
             return res
 
 
-        def event_to_dict(ev):
+        def event_to_dict(ev, promises):
             ct = ev.currentTarget
         
             result = {}
             
-            result.update(_props_to_dict(ev))
+            result.update(_props_to_dict(ev, promises))
 
             result.setdefault('currentTarget', {}).update((a.name, a.value) for a in ct.attributes if a.name.startswith('data-'))
-            
+
             return result
 
         
@@ -205,10 +211,12 @@ class DomReact(DomMorph):
             # ev.preventDefault()
 
             # console.time("geteventprops")
+
+            promises = []
             
             reactCount += 1
             
-            data = event_to_dict(ev); data['reactCount'] = reactCount
+            data = event_to_dict(ev, promises); data['reactCount'] = reactCount
 
             now = window.Date.new()
 
@@ -220,9 +228,7 @@ class DomReact(DomMorph):
 
             console.debug(f"Send Event `{ev.type}` from id {ev.currentTarget.id} to: {EVENTROUTE}")
 
-            # return compress(JSON.stringify(data)).then( _ajax_event );  # Promise
-            # compress(JSON.stringify(data)).then( _ajax_event ); return False
-            compress(JSON.stringify(data)).then( _ajax_event )
+            window.Promise.all(promises).then(lambda _: compress(JSON.stringify(data))).then( _ajax_event )
 
         # На всякий случай начальный пинг для принятия текущих заголовков
         _ajax_event(data="_ping_");  # Символа "_" нету в base64

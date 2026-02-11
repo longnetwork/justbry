@@ -182,6 +182,10 @@ class DomMorph(DomHtml):
                      window.btoa, window.atob,
                      window.eval)
 
+        def toBase64(data):
+            # apply разворачивает в кучу параметров и есть ограничение на их число (32768 == 0x8000), поэтому заменяем на чанки
+            u = Uint8Array.new(data)
+            return btoa(''.join([String.fromCharCode.apply(None, u.subarray(i, i + 0x8000)) for i in range(0, u.length, 0x8000)]))
 
         def compress(s: 'str string') -> "Promise of base64 string":    # Сжимает примерно в два раза
             byteArray = TextEncoder.new().encode(s);  # utf-8
@@ -189,8 +193,11 @@ class DomMorph(DomHtml):
             writer = cs.writable.getWriter(); writer.write(byteArray); writer.close();
             reader = Response.new(cs.readable).arrayBuffer();  # Promise (awaitable)
 
-            return reader.then( lambda data:  # Промис с навешанной лямбдой
-                                btoa(String.fromCharCode.apply(None, Uint8Array.new(data))) )
+            # ~ return reader.then( lambda data:  # Промис с навешанной лямбдой
+                                # ~ btoa(String.fromCharCode.apply(None, Uint8Array.new(data))) )
+                                
+            return reader.then(toBase64)
+                                
 
         def decompress(b: 'base64 string') -> "Promise of str string":  # base64 увеличивает размер данных примерно на 33%
             # byteArray = Uint8Array.new([ord(c) for c in atob(b)]);  # ord ~ charCodeAt(0)

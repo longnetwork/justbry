@@ -10,7 +10,6 @@ from browser.session_storage import storage as _s
 from browser.local_storage import storage as _l
 
 
-
 def helloworld(): print("Hello World")
 
 

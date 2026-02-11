@@ -23,21 +23,12 @@ long_line_behaviour=1
 long_line_column=72
 
 [files]
-current_page=6
-FILE_NAME_0=216;Python;0;EUTF-8;0;1;0;%2Fhome%2Fmint%2FWork%2Fjustbry%2Fstatic%2Fpy%2Faux.py;0;4
-FILE_NAME_1=0;Python;0;EUTF-8;0;1;0;%2Fhome%2Fmint%2FWork%2Fjustbry%2Fdemo%2Fwidget.py;0;4
-FILE_NAME_2=1736;Python;0;EUTF-8;0;1;0;%2Fhome%2Fmint%2FWork%2Fjustbry%2Fdemo%2Fcorsess.py;0;4
-FILE_NAME_3=610;Markdown;0;EUTF-8;0;1;0;%2Fhome%2Fmint%2FWork%2Fjustbry%2FREADME.md;0;4
-FILE_NAME_4=1273;Markdown;0;EUTF-8;0;1;0;%2Fhome%2Fmint%2FWork%2Fjustbry%2FDEV.md;0;4
-FILE_NAME_5=22194;Python;0;EUTF-8;0;1;0;%2Fhome%2Fmint%2FWork%2Fjustbry%2Fdomhtml.py;0;4
-FILE_NAME_6=1879;Python;0;EUTF-8;0;1;0;%2Fhome%2Fmint%2FWork%2Fjustbry%2Fdommorph.py;0;4
-FILE_NAME_7=8145;Python;0;EUTF-8;0;1;0;%2Fhome%2Fmint%2FWork%2Fjustbry%2Fdomreact.py;0;4
-FILE_NAME_8=129;Python;0;EUTF-8;0;1;0;%2Fhome%2Fmint%2FWork%2Fjustbry%2Fdemo%2Fdom.py;0;4
-FILE_NAME_9=2501;Python;0;EUTF-8;0;1;0;%2Fhome%2Fmint%2FWork%2Fjustbry%2Fdemo%2Freact.py;0;4
-FILE_NAME_10=0;Python;0;EUTF-8;0;1;0;%2Fhome%2Fmint%2FWork%2Fjustbry%2F__main__.py;0;4
-FILE_NAME_11=74;Python;0;EUTF-8;0;1;0;%2Fhome%2Fmint%2FWork%2Fjustbry%2Fconfig.py;0;4
-FILE_NAME_12=0;Python;0;EUTF-8;0;1;0;%2Fhome%2Fmint%2FWork%2Fjustbry%2Fdemo%2Fmorph.py;0;4
-FILE_NAME_13=216;Python;0;EUTF-8;0;1;0;%2Fhome%2Fmint%2FWork%2Fjustbry%2F__init__.py;0;4
+current_page=4
+FILE_NAME_0=540;Python;0;EUTF-8;0;1;0;%2Fhome%2Fmint%2FWork%2Fjustbry%2Futils.py;0;4
+FILE_NAME_1=19020;Python;0;EUTF-8;0;1;0;%2Fhome%2Fmint%2FWork%2Fjustbry%2Fdommorph.py;0;4
+FILE_NAME_2=8517;Python;0;EUTF-8;0;1;0;%2Fhome%2Fmint%2FWork%2Fjustbry%2Fdomreact.py;0;4
+FILE_NAME_3=10270;Python;0;EUTF-8;0;1;0;%2Fhome%2Fmint%2FWork%2Fjustbry%2F__init__.py;0;4
+FILE_NAME_4=0;Markdown;0;EUTF-8;0;1;0;%2Fhome%2Fmint%2FWork%2Fjustbry%2FREADME.md;0;4
 
 [VTE]
 last_dir=/home/mint/Work/justbry

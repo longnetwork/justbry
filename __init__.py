@@ -222,7 +222,7 @@ class ReactEndpoint(HTTPEndpoint):
 
             data = gzip.decompress( base64.b64decode(request_body) )
 
-            if (log := getLogger()): log.debug(f"event: {data}")
+            if (log := getLogger()): log.debug(f"event: {len(data)=} ({data[:512]}...)")
             
             # event = literal_eval(data.decode('utf-8'))
             event = json.loads(data.decode('utf-8'))
