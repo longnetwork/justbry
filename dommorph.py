@@ -270,23 +270,31 @@ class DomMorph(DomHtml):
                         case "attrs", _id, id, dict(attrs) if _id is not None:
                             el = document.getElementById(str(_id))
                             if el:
+                                attrs = { k.replace('_', '-'): v for k, v in attrs.items() }
+                                
                                 for k, v in list(el.attrs.items()):
                                     if k == 'id': continue
                                     if k not in attrs:
                                         del el.attrs[k]
+                                        
                                 for k, v in attrs.items():
-                                    if k in {'classes', '_class', 'class_', 'class', 'className'}:
+                                    if k in {'classes', 'class', 'className'}:
                                         el.attrs['class'] = v
                                         continue
+                                        
                                     if isinstance(v, bool):
                                         setattr(el, k, v)
                                         continue
-                                    if isinstance(v, str):
-                                        el.attrs[k] = v
+                                    if k == 'data-props':
+                                        for k, v in v.items():
+                                            setattr(el, k, v)
                                         continue
+                                        
                                     el.attrs[k] = v
+                                    
                                 if id is not None and id != _id:
                                     el.id = str(id)
+                                    
                         case "remove", _id, _, _ if _id is not None:
                             el = document.getElementById(str(_id))
                             if el:

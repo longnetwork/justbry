@@ -130,7 +130,6 @@ class Tag:
         if 'id' in attrs:
             self.id = attrs.pop('id')
 
-        
         self.literal = self._literal(**attrs);                    # Без id
         self.otag = self._otag(self.tag, self.literal, self.id);  # С id если tag не NODE_TEXT
         self.ctag = self._ctag(self.tag)
@@ -163,6 +162,7 @@ class Tag:
         """
             Рендер того что внутри тега после имени и до закрывающей скобки
         """
+        
         parts = []
         for k, v in attrs.items():
             if k == 'literal':
@@ -170,7 +170,7 @@ class Tag:
                 parts.append(str(v))
                 continue
 
-            if k in {'classes', '_class', 'class_', 'class', 'className'}:
+            if k in {'classes', 'class', 'className'}:
                 # parts.append(f'class="{tw.dedent(str(v))}"')
                 parts.append(f'class="{str(v)}"')
                 continue
@@ -188,7 +188,7 @@ class Tag:
 
             # parts.append(f'{k}={tw.dedent(repr(v))}')
             parts.append(f'{k}={repr(v)}')
-            
+
         return ' '.join(parts)
 
             
@@ -519,11 +519,13 @@ class Cmp(Tag):
         if hasattr(dom, 'bind'):
             dom.bind(self, evtype, handler)
 
-    def dirty(self):
+    def dirty(self, **props):
         """
-            Маркировка компонента для гарантии обновления через морфинг dom
+            Маркировка компонента для гарантии обновления через морфинг dom и/или установки properties на стороне браузера (например value)
         """
         self.upd_attrs(data_dirty = (self.get_attrs().get('data_dirty') or 0) + 1)
+        if props:
+            self.upd_attrs(data_props = props)
 
     async def update(self):
         dom = self._get_dom()

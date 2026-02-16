@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=E0401
 
-from ast import literal_eval
+# from ast import literal_eval
 
 import interpreter
 

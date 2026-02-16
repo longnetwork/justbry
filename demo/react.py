@@ -45,9 +45,10 @@ async def homepage(request):
             ),
 
             
-            Cmp('textarea', classes="textarea", readonly=True, rows="20",)(
+            txt := Cmp('textarea', classes="textarea", readonly=True, rows="20",)(
                 info := Cmp('text')
-            )
+            ),
+            crl := Cmp('button', classes="button is-primary mb-4", data_payload='payload')("Clear"),
             
         )
     )
@@ -75,6 +76,16 @@ async def homepage(request):
     
     frm.bind('submit', update_info)
 
+    async def clear_info(ev):
+
+        txt.dirty(value="Cleared")
+
+        await dom.update()
+
+
+    crl.bind('click', clear_info)
+
+    
     print(dom.render())
 
     
