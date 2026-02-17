@@ -186,8 +186,8 @@ class Tag:
                 parts.append(f'{k}="{v}"')
                 continue
 
-            # parts.append(f'{k}={tw.dedent(repr(v))}')
-            parts.append(f'{k}={repr(v)}')
+            # parts.append(f'{k}={tw.dedent("repr(v)")}')
+            parts.append(f'{k}="{repr(v)}"')
 
         return ' '.join(parts)
 
