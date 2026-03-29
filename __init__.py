@@ -261,9 +261,9 @@ class ReactEndpoint(HTTPEndpoint):
                         del request.event
                 
             if not exc:
-                return Response(status_code=202, headers=self.headers, background=bgtasks or None);  # Accepted
+                return Response(status_code=202, headers=self.headers, background = BackgroundTasks(bgtasks) if bgtasks else None);  # Accepted
             else:
-                return Response(status_code=500, headers=self.headers, background=bgtasks or None);  # Internal Server Error
+                return Response(status_code=500, headers=self.headers, background = BackgroundTasks(bgtasks) if bgtasks else None);  # Internal Server Error
             
         except Exception as e:
             if (log := getLogger()): log.exception(e)
