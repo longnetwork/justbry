@@ -234,7 +234,7 @@ class ReactEndpoint(HTTPEndpoint):
 
             event_type = event['type']
 
-            exc = None
+            exc = None; bgtasks  = []
             for evtype, handler in handlers:                          # [ (evtype, handler), ... ]
                 if evtype == event_type:
                     request.event = event
@@ -246,8 +246,12 @@ class ReactEndpoint(HTTPEndpoint):
                         #       А также над параллелизацией корутин (await asyncio.gather(*coroutine, return_exceptions=True))
                         
                         ret = handler(request)
+                        
                         if asyncio.iscoroutine(ret):
-                            await ret
+                            ret = await ret
+
+                        if isinstance(ret, BackgroundTask):
+                            bgtasks.append(ret)
                             
                     except Exception as e:
                         if (log := getLogger()): log.exception(e)
@@ -257,9 +261,9 @@ class ReactEndpoint(HTTPEndpoint):
                         del request.event
                 
             if not exc:
-                return Response(status_code=202, headers=self.headers);                     # Accepted
+                return Response(status_code=202, headers=self.headers, background=bgtasks or None);  # Accepted
             else:
-                return Response(status_code=500, headers=self.headers);                     # Internal Server Error
+                return Response(status_code=500, headers=self.headers, background=bgtasks or None);  # Internal Server Error
             
         except Exception as e:
             if (log := getLogger()): log.exception(e)
