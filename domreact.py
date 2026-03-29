@@ -242,7 +242,7 @@ class DomReact(DomMorph):
         if (el := document.getElementById(str(ID))): el.bind(EVENTTYPE, send_event)
 
 
-    def bind(self, cmp: Cmp, evtype, handler: "server-side"):  # pylint: disable=W0221
+    def bind(self, cmp: Cmp, evtype, handler: "server-side handler(request) with request.event = event"):  # pylint: disable=W0221
         """
             cmp обязан быть в структуре dom и иметь id.
         """

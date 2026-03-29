@@ -237,19 +237,24 @@ class ReactEndpoint(HTTPEndpoint):
             exc = None
             for evtype, handler in handlers:                          # [ (evtype, handler), ... ]
                 if evtype == event_type:
+                    request.event = event
                     try:
-                        # handler может быть обычной функцией, либо async-функцией, - тогда handler(event) создаст awaitable-объект
+                        # handler может быть обычной функцией, либо async-функцией, - тогда handler(request) создаст awaitable-объект
                         # lambda возвращающая coroutine также допустима
                         # XXX handlers исполняются в пределах одного dom в порядке назначения
                         # FIXME Подумать над оптимизациями связанными с назначениями многих ReactEndpoint вместо одного на всех
                         #       А также над параллелизацией корутин (await asyncio.gather(*coroutine, return_exceptions=True))
-                        ret = handler(event)
+                        
+                        ret = handler(request)
                         if asyncio.iscoroutine(ret):
                             await ret
                             
                     except Exception as e:
                         if (log := getLogger()): log.exception(e)
                         exc = e
+
+                    finally:
+                        del request.event
                 
             if not exc:
                 return Response(status_code=202, headers=self.headers);                     # Accepted

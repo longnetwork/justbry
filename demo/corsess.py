@@ -101,7 +101,8 @@ class DomView(DomReact):
 
         self.form.bind('submit', self.submit)
 
-    async def submit(self, ev):
+    async def submit(self, req):
+        ev = req.event
         login = password = ''
         for el in ev.get('currentTarget', {}).get('elements', []):
             if el.get('type') == 'text':
@@ -172,7 +173,7 @@ async def page(request):
 
     print(f"morphhash={hash(dom.body)}, dom_id={dom.dom_id}")
     
-    return await DomView().response(request)
+    return await dom.response(request)
  
 
 
