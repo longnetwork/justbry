@@ -1,7 +1,8 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from random import random
+import random
+from time import time
 
 from justbry import Justbry
 from justbry.domreact import DomReact, Cmp as _Cmp
@@ -32,32 +33,31 @@ class WNotify(Cmp):
                 
                 for mutation in mutations:
                     if mutation.type == 'childList':
-                        txt = notify_data.textContent
-                        if txt:
-                            toast = document.createElement('div')
-                            toast.className = "notification is-link box"
-                            toast.style.cssText = "box-shadow: 0 0 20px 5px rgba(0,0,0,0.5);"  # /* 0 0 [размытие] [растяжение] [цвет] */ 
-                            toast.innerHTML = txt
+                        content = notify_data.textContent; accent = notify_data.attrs.get('data-accent')
+                        if content:
+                            nfy = document.createElement('div')
+                            nfy.className = f"notification {'is-info is-light' if not accent else accent}"
+                            nfy.style.cssText = "box-shadow: 0 0 20px 5px rgba(0,0,0,0.5);"  # 0 0 [размытие] [растяжение] [цвет]
+                            nfy.innerHTML = content
 
+                            nfy.style.opacity = '0'
+                            nfy.style.transform = 'translateY(50%)'
+                            nfy.style.transition = 'all 0.3s ease-out'
 
-                            toast.style.opacity = '0'
-                            toast.style.transform = 'translateY(100%)'
-                            toast.style.transition = 'all 0.3s ease-out'
+                            notify_container.appendChild(nfy)
 
-                            notify_container.appendChild(toast)
-
-                            toast.offsetHeight;  # "Force Reflow" - заставляем браузер применить начальные стили
+                            nfy.offsetHeight;  # "Force Reflow" - заставляем браузер применить начальные стили
 
                             # Теперь плавно проявляется
-                            toast.style.opacity = '1'                                
-                            toast.style.transform = 'translateY(0)'
+                            nfy.style.opacity = '1'                                
+                            nfy.style.transform = 'translateY(0)'
 
-                            def _toast_remove(t):
-                                t.style.opacity = '0'
-                                t.style.transform = 'scale(0.85)';  # Эффект уменьшения при исчезновении
-                                t.addEventListener('transitionend', lambda ev: t.remove(), {'once': True})
+                            def _toast_remove(nfy):
+                                nfy.style.opacity = '0'
+                                nfy.style.transform = 'scale(0.85)';  # Эффект уменьшения при исчезновении
+                                nfy.addEventListener('transitionend', lambda ev: nfy.remove(), {'once': True})
                                 
-                            timer.set_timeout(_toast_remove, 5000, toast)
+                            timer.set_timeout(_toast_remove, 5000, nfy)
 
                             
             notify_observer = window.MutationObserver.new(notify_handler);  # Наблюдение за изменением notify_data
@@ -123,7 +123,8 @@ class WNotify(Cmp):
         return super().render()
 
 
-    async def notify(self, content):
+    async def notificate(self, content, *, accent="is-info is-light"):
+        self.attrs.data_accent = accent
         self.dirty(textContent=content);  # XXX textContent - это действительное свойство элемента на стороне браузера
         await self.update()
 
@@ -155,8 +156,9 @@ class DomView(DomReact):
         self.wnotify.language = req.event.get('language', self.wnotify.language)
         self.wnotify.tzoffset = req.event.get('tzoffset', self.wnotify.tzoffset)
 
-        await self.wnotify.notify(
-            f"language={self.wnotify.language}, tzoffset={self.wnotify.tzoffset}, random={random()}"
+        await self.wnotify.notificate(
+            f"language={self.wnotify.language}, tzoffset={self.wnotify.tzoffset}, timestamp={int(time())}",
+            accent = random.choice(["is-link is-light", "is-primary is-light", "is-info is-light", "is-success is-light", "is-warning is-light", "is-danger is-light"])
         )
 
 
