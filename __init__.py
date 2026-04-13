@@ -227,9 +227,9 @@ class ReactEndpoint(HTTPEndpoint):
             # event = literal_eval(data.decode('utf-8'))
             event = json.loads(data.decode('utf-8'))
 
-            currentTarget = str(event.get('currentTarget', {}).get('id'))
+            currentTargetId = str(event.get('currentTarget', {}).get('id'))
 
-            handlers = dom.handlers.get(currentTarget)
+            handlers = dom.handlers.get(currentTargetId)
             if not handlers: return Response(status_code=422, headers=self.headers);        # Unprocessable Entity 
 
             event_type = event['type']

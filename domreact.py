@@ -43,9 +43,9 @@ class DomReact(DomMorph):
         )
 
         self.eventers = eventers
-
-        self.handlers = {};  # {currentTarget: [ (evtype, handler), ... ]}
-
+        self.eventers_targets = set();  # Для отслеживания уже добавленных скриптов  type(self).eventer(cmp.id, evtype) в dom
+        self.handlers = {};             # {currentTargetId: [ (evtype, handler), ... ]}
+        
         self.evque = deque(maxlen=256)
 
     async def response(self, request=None):
@@ -60,7 +60,7 @@ class DomReact(DomMorph):
         # pylint: disable=E0401,W0611,W0612,W0621,W0601,R0204
 
         from javascript import JSON
-        from browser import document, window, ajax, console, timer, DOMEvent, DOMNode
+        from browser import document, window, ajax, console, timer, DOMEvent, DOMNode;  # noqa
         from morpher import compress, toBase64
         
 
@@ -249,11 +249,17 @@ class DomReact(DomMorph):
 
         assert cmp._get_dom() is self
 
-        self.eventers.add(
-            type(self).eventer(cmp.id, evtype)
-        )
-        handlers = self.handlers.setdefault(str(cmp.id), [])
+        currentTargetId = str(cmp.id)
 
+        handlers = self.handlers.setdefault(currentTargetId, [])
+
+        # В один eventers два и больше currentTargetId с одинаковыми evtype не должны попасть (иначе дубликаты на стороне сервера)
+        if currentTargetId not in self.eventers_targets:
+            self.eventers.add(
+                type(self).eventer(cmp.id, evtype)
+            )
+            self.eventers_targets.add(currentTargetId)
+        
         handlers.append( (evtype, handler) )
 
 
