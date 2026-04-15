@@ -407,6 +407,18 @@ class DomMorph(DomHtml):
             return HTMLResponse(render, headers=self.headers)
 
     async def update(self):
+        """
+            update из фоновых задач может быть в момент когда response уже отдано но браузер еще не открыл сокеты.
+            В этом случае мы должны вернуть False, чтобы задачи знали что изменение dom на которое они рассчитывали
+            может быть в моменте не действительно.
+            FIXME: Cпособ осуществлять update только при наличии изменений в задачах может часто при первом рендере
+                   втыкаться в этот момент (когда morphhash уже есть в self.responses а websocket еще нет)
+
+                   self.morphsockets = {};  # {websocket: (deepcopy(self.body), morphhash)}
+                   self.responses = {};     # {morphhash: (deepcopy(self.body), HTMLResponse(self.render()))}
+
+                   (здесь morphhash всегда int)
+        """
 
         async with self.alock:
 
@@ -415,7 +427,8 @@ class DomMorph(DomHtml):
             
             # Далее работаем со снимком body в данный момент (ниже есть переключение await и self.body может меняться во вне)
 
-            updates = []
+            updates = []; morphhashes = set(self.responses.keys());  # Для обнаружения случая когда браузер еще не успел открыть сокеты
+            
             for socket, (_body, morphhash) in list(self.morphsockets.items()):
                 if body != _body:   # Есть изменения dom
                     
@@ -427,11 +440,17 @@ class DomMorph(DomHtml):
                     # То есть morphhash - это первый хешь при первой отдачи response на сторону браузера
                     self.morphsockets[socket] = (_body, morphhash)
 
+                morphhashes.discard(morphhash)
+                
+
             if updates:
                 results = await asyncio.gather(*updates, return_exceptions=True)
                 for e in results:
                     if isinstance(e, Exception):
                         if (log := getLogger()): log.exception(e)
+
+            return not bool(morphhashes);  # Если прошлись по всем responses то все обновлено - возвращаем True
+            
 
     async def locate(self, href = '/'):
         async with self.alock:
