@@ -418,6 +418,19 @@ class DomMorph(DomHtml):
                    self.responses = {};     # {morphhash: (deepcopy(self.body), HTMLResponse(self.render()))}
 
                    (здесь morphhash всегда int)
+
+            XXX Разумная парадигма обновления dom из фоновых задач:
+
+                update = False
+                while not shutdown():
+                    ...
+                    try:
+                        ...
+                        if changed: update = True
+                        ...
+                            
+                    finally:
+                        if update: update = not await dom.update()
         """
 
         async with self.alock:
