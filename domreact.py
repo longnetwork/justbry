@@ -43,10 +43,10 @@ class DomReact(DomMorph):
         )
 
         self.eventers = eventers
-        self.eventers_targets = set();  # Для отслеживания уже добавленных скриптов  type(self).eventer(cmp.id, evtype) в dom
-        self.handlers = {};             # {currentTargetId: [ (evtype, handler), ... ]}
+        self.eventers_targets = set();   # Для отслеживания уже добавленных скриптов  type(self).eventer(cmp.id, evtype) в dom
+        self.handlers = {};              # {currentTargetId: [ (evtype, handler), ... ]}
         
-        self.evque = deque(maxlen=256)
+        self.evque = deque(maxlen=256);  # FIXME Захардкодил
 
     async def response(self, request=None):
         self.reactendpoint.doms[self.dom_id] = self

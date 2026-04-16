@@ -531,7 +531,6 @@ class Cmp(Tag):
         dom = self._get_dom()
         if hasattr(dom, 'update'):
             return await dom.update()
-        return True
 
 
     @property

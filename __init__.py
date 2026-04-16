@@ -174,7 +174,7 @@ class MorphEndpoint(WebSocketEndpoint):
                 # Вкладка/браузер закрыли - подчистка ресурсов если morphhash больше не юзается
                 # FIXME Избежать пробегания в цикле при использовании weakref на websocket 
                 if not any( m == morphhash for _, m in dom.morphsockets.values()):
-                    dom.responses.pop(morphhash, None)
+                    dom.responses.pop(morphhash, None); dom._responses.pop(morphhash, None);
                     if (log := getLogger()): log.info(f"Clean responses: {morphhash=}")
                     if not dom.responses:
                         self.doms.pop(dom_id, None)

@@ -8,6 +8,8 @@
 
 import asyncio, base64, gzip, json
 
+from time import time
+
 from copy import deepcopy
 
 
@@ -63,6 +65,8 @@ class DomMorph(DomHtml):
 
         self.morphsockets = {};  # {websocket: (deepcopy(self.body), morphhash)}
         self.responses = {};     # {morphhash: (deepcopy(self.body), HTMLResponse(self.render()))}
+        self._responses = {};    # {morphhash: time()}
+        
 
         # XXX Starlette не async обработчики запускает в threadpool автоматом (оборачивает в awaitable объект)
         
@@ -383,10 +387,25 @@ class DomMorph(DomHtml):
 
             XXX Пока не будет self.update() body не изменится (морфинг накопительным итогом)
 
+            self.morphsockets = {};  # {websocket: (deepcopy(self.body), morphhash)}
+            self.responses = {};     # {morphhash: (deepcopy(self.body), HTMLResponse(self.render()))}
+            self._responses = {};    # {morphhash: time()}
+                  
         """
         self.morphendpoint.doms[self.dom_id] = self
         
         async with self.alock:
+
+            # Обязаны проверить зомби-morphhash созданные ботами без скриптов (без открытия сокетов)
+            # Все для которых долго не открыты сокеты - зомби
+            ctime = time() - 60;  # FIXME Захардкодил
+            
+            workers = set(m for _, m in self.morphsockets.values());  # Все для которых открыты сокеты
+            zombies = set(m for m, t in self._responses.items() if t < ctime)
+            zombies -= workers
+            if zombies:
+                for m in zombies: self.responses.pop(m, None); self._responses.pop(m, None)
+                if (log := getLogger()): log.debug(f"Clean {len(zombies)} zombies")
 
             morphhash = hash(self.body)
             # Даже если интеграции виджетов при первом рендере изменят morphhash, то это ни на что не влияет,
@@ -399,7 +418,7 @@ class DomMorph(DomHtml):
                 render = self.render()
 
                 # Фактическое body после первого рендера
-                self.responses[morphhash] = ( deepcopy(self.body), render )
+                self.responses[morphhash] = ( deepcopy(self.body), render ); self._responses[morphhash] = time()
                 
             else:
                 render = self.responses[morphhash][1];  # XXX Кешированный рендер
@@ -407,40 +426,17 @@ class DomMorph(DomHtml):
             return HTMLResponse(render, headers=self.headers)
 
     async def update(self):
-        """
-            update из фоновых задач может быть в момент когда response уже отдано но браузер еще не открыл сокеты.
-            В этом случае мы должны вернуть False, чтобы задачи знали что изменение dom на которое они рассчитывали
-            может быть в моменте не действительно.
-            FIXME: Cпособ осуществлять update только при наличии изменений в задачах может часто при первом рендере
-                   втыкаться в этот момент (когда morphhash уже есть в self.responses а websocket еще нет)
-
-                   self.morphsockets = {};  # {websocket: (deepcopy(self.body), morphhash)}
-                   self.responses = {};     # {morphhash: (deepcopy(self.body), HTMLResponse(self.render()))}
-
-                   (здесь morphhash всегда int)
-
-            XXX Разумная парадигма обновления dom из фоновых задач:
-
-                update = False
-                while not shutdown():
-                    ...
-                    try:
-                        ...
-                        if changed: update = True
-                        ...
-                            
-                    finally:
-                        if update: update = not await dom.update()
-        """
-
         async with self.alock:
-
+            # FIXME Могут быть зомби-morphhash в responses когда быстро снова обновили страницу
+            #       еще до открытия сокета но после фоновых изменений или прервали загрузку
+            #       (могут быть вечные попытки обновить зомби-morphhash - браузер в итоге может открыть сокет)
+            
             # update вызывается когда действительно есть обновления dom и deepcopy под блокировкой оправдано с точки зрения оптимизации
             body = deepcopy(self.body)
             
             # Далее работаем со снимком body в данный момент (ниже есть переключение await и self.body может меняться во вне)
 
-            updates = []; morphhashes = set(self.responses.keys());  # Для обнаружения случая когда браузер еще не успел открыть сокеты
+            updates = []
             
             for socket, (_body, morphhash) in list(self.morphsockets.items()):
                 if body != _body:   # Есть изменения dom
@@ -453,16 +449,11 @@ class DomMorph(DomHtml):
                     # То есть morphhash - это первый хешь при первой отдачи response на сторону браузера
                     self.morphsockets[socket] = (_body, morphhash)
 
-                morphhashes.discard(morphhash)
-                
-
             if updates:
                 results = await asyncio.gather(*updates, return_exceptions=True)
                 for e in results:
                     if isinstance(e, Exception):
                         if (log := getLogger()): log.exception(e)
-
-            return not bool(morphhashes);  # Если прошлись по всем responses то все обновлено - возвращаем True
             
 
     async def locate(self, href = '/'):
