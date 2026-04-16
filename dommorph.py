@@ -426,10 +426,12 @@ class DomMorph(DomHtml):
             return HTMLResponse(render, headers=self.headers)
 
     async def update(self):
+        """
+            TODO: update() холостая когда нету изменений и нужна оптимизация из-за частых deepcopy при обновлении из фоновых
+                  процессов, которые вынуждены предполагают что прошлый update() еще до открытия сокета браузером не прошел
+                  и нужен повторный update()
+        """
         async with self.alock:
-            # FIXME Могут быть зомби-morphhash в responses когда быстро снова обновили страницу
-            #       еще до открытия сокета но после фоновых изменений или прервали загрузку
-            #       (могут быть вечные попытки обновить зомби-morphhash - браузер в итоге может открыть сокет)
             
             # update вызывается когда действительно есть обновления dom и deepcopy под блокировкой оправдано с точки зрения оптимизации
             body = deepcopy(self.body)
@@ -454,7 +456,8 @@ class DomMorph(DomHtml):
                 for e in results:
                     if isinstance(e, Exception):
                         if (log := getLogger()): log.exception(e)
-            
+
+            return bool(updates);  # False когда холостая отработка
 
     async def locate(self, href = '/'):
         async with self.alock:
@@ -467,3 +470,10 @@ class DomMorph(DomHtml):
                 for e in results:
                     if isinstance(e, Exception):
                         if (log := getLogger()): log.exception(e)                
+
+            return bool(updates)
+
+
+
+
+            
