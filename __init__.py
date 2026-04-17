@@ -148,8 +148,9 @@ class MorphEndpoint(WebSocketEndpoint):
             async with dom.alock:
                 morphhash = int(data)
                 if morphhash in dom.responses:
-                    body = dom.responses[morphhash][0]
-                    dom.morphsockets[websocket] = (body, morphhash);  # Теперь dom может сам себя обновлять на стороне браузера
+                    body, _, bodyhash = dom.responses[morphhash]
+                    # Теперь dom может сам себя обновлять на стороне браузера
+                    dom.morphsockets[websocket] = (body, morphhash, bodyhash)
                     
                     # await websocket.send_text(data);                # _pong_
                     return
@@ -167,13 +168,13 @@ class MorphEndpoint(WebSocketEndpoint):
             
         async with dom.alock:
             
-            _, morphhash = dom.morphsockets.pop(websocket, (None, None))
+            _, morphhash, _ = dom.morphsockets.pop(websocket, (None, None, None))
 
             # if close_code == 1001:
             if True:
                 # Вкладка/браузер закрыли - подчистка ресурсов если morphhash больше не юзается
                 # FIXME Избежать пробегания в цикле при использовании weakref на websocket 
-                if not any( m == morphhash for _, m in dom.morphsockets.values()):
+                if not any( m == morphhash for _, m, _ in dom.morphsockets.values()):
                     dom.responses.pop(morphhash, None); dom._responses.pop(morphhash, None);
                     if (log := getLogger()): log.info(f"Clean responses: {morphhash=}")
                     if not dom.responses:

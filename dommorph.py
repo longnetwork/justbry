@@ -63,8 +63,8 @@ class DomMorph(DomHtml):
         # Чтобы не апдэйтить все body а лишь изменяющуюся часть через web-socket 
         # нам нужно отдельно хранить копии того что отдано в бразуер
 
-        self.morphsockets = {};  # {websocket: (deepcopy(self.body), morphhash)}
-        self.responses = {};     # {morphhash: (deepcopy(self.body), HTMLResponse(self.render()))}
+        self.morphsockets = {};  # {websocket: (deepcopy(self.body), morphhash, bodyhash)}
+        self.responses = {};     # {morphhash: (deepcopy(self.body), HTMLResponse(self.render()), bodyhash)}
         self._responses = {};    # {morphhash: time()}
         
 
@@ -387,8 +387,8 @@ class DomMorph(DomHtml):
 
             XXX Пока не будет self.update() body не изменится (морфинг накопительным итогом)
 
-            self.morphsockets = {};  # {websocket: (deepcopy(self.body), morphhash)}
-            self.responses = {};     # {morphhash: (deepcopy(self.body), HTMLResponse(self.render()))}
+            self.morphsockets = {};  # {websocket: (deepcopy(self.body), morphhash, bodyhash)}
+            self.responses = {};     # {morphhash: (deepcopy(self.body), HTMLResponse(self.render()), bodyhash)}
             self._responses = {};    # {morphhash: time()}
                   
         """
@@ -400,7 +400,7 @@ class DomMorph(DomHtml):
             # Все для которых долго не открыты сокеты - зомби
             ctime = time() - 60;  # FIXME Захардкодил
             
-            workers = set(m for _, m in self.morphsockets.values());  # Все для которых открыты сокеты
+            workers = set(m for _, m, _ in self.morphsockets.values());  # Все для которых открыты сокеты
             zombies = set(m for m, t in self._responses.items() if t < ctime)
             zombies -= workers
             if zombies:
@@ -415,10 +415,10 @@ class DomMorph(DomHtml):
             if morphhash not in self.responses:
                 self.morphhash.attrs.content = str(morphhash)
                 
-                render = self.render()
+                render = self.render(); bodyhash = hash(self.body);  # self.render() может динамически изменить self.body
 
                 # Фактическое body после первого рендера
-                self.responses[morphhash] = ( deepcopy(self.body), render ); self._responses[morphhash] = time()
+                self.responses[morphhash] = ( deepcopy(self.body), render, bodyhash ); self._responses[morphhash] = time()
                 
             else:
                 render = self.responses[morphhash][1];  # XXX Кешированный рендер
@@ -427,29 +427,37 @@ class DomMorph(DomHtml):
 
     async def update(self):
         """
-            TODO: update() холостая когда нету изменений и нужна оптимизация из-за частых deepcopy при обновлении из фоновых
-                  процессов, которые вынуждены предполагают что прошлый update() еще до открытия сокета браузером не прошел
-                  и нужен повторный update()
+            XXX:  update() холостая когда нету изменений и нужна оптимизация по hash из-за частых deepcopy при
+                  обновлении из фоновых процессов, которые вынуждены предполагают что прошлый update() еще до
+                  открытия сокета браузером не прошел и нужен повторный update()
+
+                  update() из обработчиков eventers вызывается когда действительно есть обновления dom и deepcopy 
+                  под блокировкой оправдано с точки зрения оптимизации.
+
+                  FIXME По тестам рекусивный hash всего лишь в 2 раза быстрее deepcopy
         """
         async with self.alock:
             
-            # update вызывается когда действительно есть обновления dom и deepcopy под блокировкой оправдано с точки зрения оптимизации
-            body = deepcopy(self.body)
+            if not self.morphsockets: return False
+            
+            bodyhash = hash(self.body); bodycopy = None
             
             # Далее работаем со снимком body в данный момент (ниже есть переключение await и self.body может меняться во вне)
 
             updates = []
             
-            for socket, (_body, morphhash) in list(self.morphsockets.items()):
-                if body != _body:   # Есть изменения dom
+            for socket, (_body, morphhash, _bodyhash) in list(self.morphsockets.items()):
+                if bodyhash != _bodyhash:   # Есть изменения dom
                     
-                    diffs = list(self.compare_dom(body, _body))
+                    bodycopy = bodycopy or deepcopy(self.body);  # Однократная deepcopy
+                    
+                    diffs = list(self.compare_dom(bodycopy, _body))
                     if diffs:                        
                         updates.append(socket.send_text( base64.b64encode(gzip.compress(json.dumps(diffs).encode())).decode() ))
-                        _body = body
+                        
                     # morphhash менять нельзя, чтобы работала очистка self.responses при закрытии сокета
                     # То есть morphhash - это первый хешь при первой отдачи response на сторону браузера
-                    self.morphsockets[socket] = (_body, morphhash)
+                    self.morphsockets[socket] = (bodycopy, morphhash, bodyhash)
 
             if updates:
                 results = await asyncio.gather(*updates, return_exceptions=True)
@@ -458,6 +466,7 @@ class DomMorph(DomHtml):
                         if (log := getLogger()): log.exception(e)
 
             return bool(updates);  # False когда холостая отработка
+
 
     async def locate(self, href = '/'):
         async with self.alock:
