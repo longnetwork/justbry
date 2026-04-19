@@ -55,7 +55,8 @@ async def homepage(request):
 
 
     async def update_info(req):
-        info.attrs.literal = str(req.event)
+        # info.attrs.literal = str(req.event)
+        txt.dirty(value=str(req.event))
         
         await dom.update()
 
@@ -76,8 +77,9 @@ async def homepage(request):
     
     frm.bind('submit', update_info)
 
-    async def clear_info(req):
+    async def clear_info(_req):
 
+        # info.attrs.literal = "Cleared"
         txt.dirty(value="Cleared")
 
         await dom.update()
