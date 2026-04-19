@@ -267,8 +267,8 @@ class DomMorph(DomHtml):
                             el = document.getElementById(str(_id))
                             if el:
                                 el.innerHTML = innerHTML
-                                # ~ if el.tagName in {'TEXTAREA', 'textarea'}:  # Только для этого тега это имеет смысл
-                                    # ~ el.value = innerHTML
+                                if el.tagName in {'TEXTAREA', 'textarea'}:  # Только для этого тега это имеет смысл
+                                    el.value = innerHTML
                                 if id is not None and id != _id:
                                     el.id = str(id)
                         case "attrs", _id, id, dict(attrs) if _id is not None:
