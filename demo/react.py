@@ -10,6 +10,36 @@ async def homepage(request):
     """
         Не расшаренный dom
     """
+
+    @DomReact.brython
+    def emitter_scripts():
+        # pylint: disable=E0401
+        
+        from javascript import JSON
+        from browser import document, window
+
+        def emit_data(payload=None):
+            """
+                Передатчик фронт-енд данных через механизм react.
+                В бак-енде:
+                  - внедряется: Cmp('script', type='application/json', name='emitter', data_payload=...)
+                  - и биндится: self.emitter.bind('change', self.emit_data)
+                Во фронт-енде юзается по месту emit_data(...)
+            """
+            if (emitter := document.select_one("[name='emitter']")):
+                emitter.attrs['data-payload'] = JSON.stringify(payload)
+                emitter.dispatchEvent(window.Event.new('change'))
+
+
+        # Демо передачи данных при клике на 'emit-button'
+        if (btn := document.select_one("button[name='emit-button']")):
+            btn.bind('click', lambda _ev: emit_data({
+                'timestamp': (now := window.Date.new()).getTime() / 1000,
+                'tzoffset': now.getTimezoneOffset() * 60,
+                'language': window.navigator.language,
+            }))
+
+    
     dom = DomReact(
         Cmp('div', classes="box")(
             Cmp('div', classes="grid")(
@@ -48,8 +78,22 @@ async def homepage(request):
             txt := Cmp('textarea', classes="textarea", readonly=True, rows="20",)(
                 info := Cmp('text')
             ),
-            crl := Cmp('button', classes="button is-primary mb-4", data_payload='payload')("Clear"),
+
+            Cmp('div', classes="level")(
+                Cmp('div', classes="level-left")(Cmp('div', classes="level-item")(
+                    crl := Cmp('button', classes="button is-primary m-4", data_payload='payload')("Clear"),
+                )),
+                Cmp('div', classes="level-right")(Cmp('div', classes="level-item")(
+                    Cmp('button', name='emit-button', classes="button is-primary m-4", data_payload='payload')("Emit")
+                ))
+            )
             
+        ),
+
+        emitter := Cmp('script', type='application/json', name='emitter', data_payload=...),  # Эмиттер внешних данных через симулированное событие change
+
+        Cmp('script', type='text/python')(
+            emitter_scripts(),  # Внедрение необходимых фронт-енд скриптов
         )
     )
 
@@ -84,8 +128,19 @@ async def homepage(request):
 
         await dom.update()
 
-
     crl.bind('click', clear_info)
+
+
+    async def emit_data(req):
+        target = req.event.get('currentTarget', {})
+        data_payload = target.get('data-payload', '');  # Возможно json.loads(data_payload)
+        
+        info.attrs.literal = data_payload
+        # txt.dirty(value=data_payload)
+
+        await dom.update()
+
+    emitter.bind('change', emit_data)
 
     
     print(dom.render())
