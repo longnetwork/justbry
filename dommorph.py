@@ -289,6 +289,7 @@ class DomMorph(DomHtml):
                                     if isinstance(v, bool):
                                         setattr(el, k, v)
                                         continue
+                                        
                                     if k == 'data-props':
                                         for k, v in v.items():
                                             setattr(el, k, v)
@@ -315,6 +316,9 @@ class DomMorph(DomHtml):
                                 el.insertAdjacentHTML('beforeend', outerHTML)
                                 if id is not None and id != _id:
                                     el.id = str(id)                
+
+                # FIXME Когда меняются аттрибуты и id браузер не хочет корректно пересчитать стили без "пинка"
+                node = document.createTextNode(""); document.body.appendChild(node); _ = document.body.offsetHeight; document.body.removeChild(node)
 
 
             def _open(ev):
