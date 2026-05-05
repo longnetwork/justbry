@@ -253,12 +253,13 @@ class DomReact(DomMorph):
 
         handlers = self.handlers.setdefault(currentTargetId, [])
 
-        # В один eventers два и больше currentTargetId с одинаковыми evtype не должны попасть (иначе дубликаты на стороне сервера)
-        if currentTargetId not in self.eventers_targets:
+        # В один eventers два одинаковых биндинга не должны попасть (иначе дубликаты на стороне сервера)
+        eventer_target = evtype + currentTargetId
+        if eventer_target not in self.eventers_targets:
             self.eventers.add(
                 type(self).eventer(cmp.id, evtype)
             )
-            self.eventers_targets.add(currentTargetId)
+            self.eventers_targets.add(eventer_target)
         
         handlers.append( (evtype, handler) )
 
