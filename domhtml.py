@@ -109,7 +109,8 @@ class Tag:
 
         """
         self.tag = tag
-        self.id = None
+        
+        object.__setattr__(self, 'id', None)
 
         self.set_attrs(literal, **attrs)
 
@@ -128,7 +129,7 @@ class Tag:
             attrs['literal'] = literal
 
         if 'id' in attrs:
-            self.id = attrs.pop('id')
+            object.__setattr__(self, 'id', attrs.pop('id'))
 
         self.literal = self._literal(**attrs);                    # Без id
         self.otag = self._otag(self.tag, self.literal, self.id);  # С id если tag не NODE_TEXT
@@ -155,8 +156,13 @@ class Tag:
 
         self.set_attrs(**_attrs)
                 
-    
+    def __setattr__(self, name, value):
+        if name == 'id':
+            self.upd_attrs(id=value)
+        else:
+            super().__setattr__(name, value)
 
+    
     @staticmethod
     def _literal(**attrs):
         """
