@@ -287,7 +287,7 @@ class DomMorph(DomHtml):
                                         continue
                                         
                                     if isinstance(v, bool):
-                                        # setattr(el, k, v)
+                                        setattr(el, k, v)
                                         if v:
                                             el.attrs[k] = ""
                                         else:
