@@ -267,7 +267,7 @@ class DomMorph(DomHtml):
                             el = document.getElementById(str(_id))
                             if el:
                                 el.innerHTML = innerHTML
-                                if el.tagName in {'TEXTAREA', 'textarea'}:  # Только для этого тега это имеет смысл
+                                if el.tagName in {'TEXTAREA', 'textarea'}:  # FIXME Только для этого тега это имеет смысл
                                     el.value = innerHTML
                                 if id is not None and id != _id:
                                     el.id = str(id)
@@ -287,7 +287,12 @@ class DomMorph(DomHtml):
                                         continue
                                         
                                     if isinstance(v, bool):
-                                        setattr(el, k, v)
+                                        # setattr(el, k, v)
+                                        if v:
+                                            el.attrs[k] = ""
+                                        else:
+                                            try: del el.attrs[k]
+                                            except: pass
                                         continue
                                         
                                     if k == 'data-props':
