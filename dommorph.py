@@ -301,7 +301,8 @@ class DomMorph(DomHtml):
                                         continue                                        
                                         
                                     el.attrs[k] = v
-                                    if k in {'value', 'href', 'src', 'action', }:  # FIXME полный список
+                                    # if k in {'value', 'href', 'src', 'action', }:  # FIXME полный список
+                                    if k in {'value', }:
                                         setattr(el, k, v)
                                     
                                 if id is not None and id != _id:
