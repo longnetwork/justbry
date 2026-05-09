@@ -34,7 +34,6 @@
     FIXME нужна оптимизация через lru_cache для рендеров/вычислений хешей/для всего рекурсивного...
 
 """
-# pylint: disable=E1101
 
 import itertools, inspect, textwrap as tw, weakref
 
@@ -132,9 +131,9 @@ class Tag:
         if 'id' in attrs:
             object.__setattr__(self, 'id', attrs.pop('id'))
 
-        object.__setattr__(self, 'literal', self._literal(**attrs));  # Без id
+        self.literal = self._literal(**attrs);                    # Без id
         
-        self.otag = self._otag(self.tag, self.literal, self.id);      # С id если tag не NODE_TEXT
+        self.otag = self._otag(self.tag, self.literal, self.id);  # С id если tag не NODE_TEXT
         self.ctag = self._ctag(self.tag)
 
         self._attrs = attrs
@@ -159,11 +158,21 @@ class Tag:
         self.set_attrs(**_attrs)
                 
     def __setattr__(self, name, value):
-        if name in {'id', 'literal'}:
-            self.upd_attrs({name: value})
+        """
+            Сокращение доступа без .attrs. к некоторым служебным атрибутам
+        """
+        if name == 'id':
+            self.attrs.id = value
+        elif name == 'text':
+            self.attrs.literal = value
         else:
             super().__setattr__(name, value)
 
+    def __getattr__(self, name):
+        if name == 'text':
+            return self.attrs.literal
+        raise AttributeError(f"'{type(self).__name__}' object has no attribute '{name}'")
+        
     
     @staticmethod
     def _literal(**attrs):

@@ -30,7 +30,7 @@ class DomView(DomReact):
             ),
             Cmp('p', name='error', classes="help is-danger")(_error := Cmp('text', error)),
         )
-        cmp.error = _error;  # cmp.error.literal="text"
+        cmp.error = _error;  # cmp.error.text="text"
         return cmp        
 
     @staticmethod
@@ -113,11 +113,11 @@ class DomView(DomReact):
         # DB Access Simulate
         
         for c in "⓵⓶⓷✌":
-            self.info.literal = c
+            self.info.text = c
             await self.update()
             await asyncio.sleep(0.75)
         
-        self.info.literal = f"login: {login}<br>password: {password}"
+        self.info.text = f"login: {login}<br>password: {password}"
         self.button.dirty()
         
         await self.update()
@@ -129,7 +129,7 @@ class DomView(DomReact):
 
     async def response(self, request=None):
         session_id = request and request.session['id']
-        self.info.literal = f"session_id: {session_id}"
+        self.info.text = f"session_id: {session_id}"
         
         return await super().response(request)
 
