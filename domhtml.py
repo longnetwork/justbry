@@ -159,10 +159,8 @@ class Tag:
         self.set_attrs(**_attrs)
                 
     def __setattr__(self, name, value):
-        if name == 'id':
-            self.upd_attrs(id=value)
-        elif name == 'literal':
-            self.upd_attrs(literal=value)
+        if name in {'id', 'literal'}:
+            self.upd_attrs({name: value})
         else:
             super().__setattr__(name, value)
 
