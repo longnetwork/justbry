@@ -286,6 +286,11 @@ class DomMorph(DomHtml):
                                         el.attrs['class'] = v
                                         continue
                                         
+                                    if k == 'data-props':
+                                        for k, v in v.items():
+                                            setattr(el, k, v)
+                                        continue
+
                                     if isinstance(v, bool):
                                         setattr(el, k, v)
                                         if v:
@@ -293,14 +298,11 @@ class DomMorph(DomHtml):
                                         else:
                                             try: del el.attrs[k]
                                             except: pass
-                                        continue
-                                        
-                                    if k == 'data-props':
-                                        for k, v in v.items():
-                                            setattr(el, k, v)
-                                        continue
+                                        continue                                        
                                         
                                     el.attrs[k] = v
+                                    if k in {'value', 'href', 'src', 'action', }:  # FIXME полный список
+                                        setattr(el, k, v)
                                     
                                 if id is not None and id != _id:
                                     el.id = str(id)
