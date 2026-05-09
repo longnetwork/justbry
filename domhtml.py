@@ -164,13 +164,17 @@ class Tag:
         if name == 'id':
             self.attrs.id = value
         elif name == 'text':
-            self.attrs.literal = value
+            if self.tag in {Tag.NODE_TEXT, Tag.SCRIPT_TEXT}:
+                self.attrs.literal = value
+            else:
+                raise AttributeError(f"'{type(self).__name__}' object has no attribute '{name}'")
         else:
             super().__setattr__(name, value)
 
     def __getattr__(self, name):
         if name == 'text':
-            return self.attrs.literal
+            if self.tag in {Tag.NODE_TEXT, Tag.SCRIPT_TEXT}:
+                return self.attrs.literal
         raise AttributeError(f"'{type(self).__name__}' object has no attribute '{name}'")
         
     
