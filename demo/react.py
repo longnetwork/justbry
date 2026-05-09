@@ -99,7 +99,7 @@ async def homepage(request):
 
 
     async def update_info(req):
-        # info.attrs.literal = str(req.event)
+        # info.literal = str(req.event)
         txt.dirty(value=str(req.event))
         
         await dom.update()
@@ -123,7 +123,7 @@ async def homepage(request):
 
     async def clear_info(_req):
 
-        # info.attrs.literal = "Cleared"
+        # info.literal = "Cleared"
         txt.dirty(value="Cleared")
 
         await dom.update()
@@ -135,7 +135,7 @@ async def homepage(request):
         target = req.event.get('currentTarget', {})
         data_payload = target.get('data-payload', '');  # Возможно json.loads(data_payload)
         
-        info.attrs.literal = data_payload
+        info.literal = data_payload
         # txt.dirty(value=data_payload)
 
         await dom.update()

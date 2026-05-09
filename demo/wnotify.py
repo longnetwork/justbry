@@ -141,7 +141,7 @@ class DomView(DomReact):
             _wnotify := WNotify(),
         )
 
-        _button.label = _label;  # _button.label.attrs.literal = ...
+        _button.label = _label;  # _button.label.literal = ...
 
         self.button = _button
 

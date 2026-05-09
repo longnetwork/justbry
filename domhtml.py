@@ -34,6 +34,7 @@
     FIXME нужна оптимизация через lru_cache для рендеров/вычислений хешей/для всего рекурсивного...
 
 """
+# pylint: disable=E1101
 
 import itertools, inspect, textwrap as tw, weakref
 
@@ -131,8 +132,9 @@ class Tag:
         if 'id' in attrs:
             object.__setattr__(self, 'id', attrs.pop('id'))
 
-        self.literal = self._literal(**attrs);                    # Без id
-        self.otag = self._otag(self.tag, self.literal, self.id);  # С id если tag не NODE_TEXT
+        object.__setattr__(self, 'literal', self._literal(**attrs));  # Без id
+        
+        self.otag = self._otag(self.tag, self.literal, self.id);      # С id если tag не NODE_TEXT
         self.ctag = self._ctag(self.tag)
 
         self._attrs = attrs
@@ -159,6 +161,8 @@ class Tag:
     def __setattr__(self, name, value):
         if name == 'id':
             self.upd_attrs(id=value)
+        elif name == 'literal':
+            self.upd_attrs(literal=value)
         else:
             super().__setattr__(name, value)
 
