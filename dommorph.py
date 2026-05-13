@@ -260,20 +260,17 @@ class DomMorph(DomHtml):
                 for d in data:
                     match d:
                         case "outerHTML", _id, _, str(outerHTML) if _id is not None:  # outerHTML уже содержит новый id
-                            el = document.getElementById(str(_id))
-                            if el:
+                            for el in document.select(f"[id='{_id}']"):
                                 el.outerHTML = outerHTML
                         case "innerHTML", _id, id, str(innerHTML) if _id is not None:
-                            el = document.getElementById(str(_id))
-                            if el:
+                            for el in document.select(f"[id='{_id}']"):
                                 el.innerHTML = innerHTML
                                 if el.tagName in {'TEXTAREA', 'textarea'}:  # FIXME Только для этого тега это имеет смысл
                                     el.value = innerHTML
                                 if id is not None and id != _id:
                                     el.id = str(id)
                         case "attrs", _id, id, dict(attrs) if _id is not None:
-                            el = document.getElementById(str(_id))
-                            if el:
+                            for el in document.select(f"[id='{_id}']"):
                                 attrs = { k.replace('_', '-'): v for k, v in attrs.items() }
                                 
                                 for k, v in list(el.attrs.items()):
@@ -309,18 +306,15 @@ class DomMorph(DomHtml):
                                     el.id = str(id)
                                     
                         case "remove", _id, _, _ if _id is not None:
-                            el = document.getElementById(str(_id))
-                            if el:
+                            for el in document.select(f"[id='{_id}']"):
                                 el.remove()
                         case "afterbegin", _id, id, str(outerHTML) if _id is not None:
-                            el = document.getElementById(str(_id))
-                            if el:
+                            for el in document.select(f"[id='{_id}']"):
                                 el.insertAdjacentHTML('afterbegin', outerHTML)
                                 if id is not None and id != _id:
                                     el.id = str(id)
                         case "beforeend", _id, id, str(outerHTML) if _id is not None:
-                            el = document.getElementById(str(_id))
-                            if el:
+                            for el in document.select(f"[id='{_id}']"):
                                 el.insertAdjacentHTML('beforeend', outerHTML)
                                 if id is not None and id != _id:
                                     el.id = str(id)                
