@@ -249,6 +249,8 @@ class DomMorph(DomHtml):
             ws = websocket.WebSocket(MORPHROUTE); morphhash = '';  # morphhash во фронт-энде в globals
 
             def morphing(data):    # Морфинг DOM
+                console.time("Dom Morphing time:")
+
                 global morphhash;  # noqa
 
                 if not morphhash: return
@@ -256,13 +258,17 @@ class DomMorph(DomHtml):
                 if isinstance(data, str): data = JSON.parse(data);  # FIXME literal_eval Багованный (всерает ковычки лишними escap-ами \\)
 
                 if not data: return
+
+                _afterbegin = set(); _beforeend = set();  # FIXME для обхода дубликатов id
                 
-                for d in data:
+                for d in data:                            # FIXME select через атрибут для браузера тяжелее чем выборка по уникальному id
                     match d:
                         case "outerHTML", _id, _, str(outerHTML) if _id is not None:  # outerHTML уже содержит новый id
+                            # if (el := document.getElementById(str(_id))):
                             for el in document.select(f"[id='{_id}']"):
                                 el.outerHTML = outerHTML
                         case "innerHTML", _id, id, str(innerHTML) if _id is not None:
+                            # if (el := document.getElementById(str(_id))):
                             for el in document.select(f"[id='{_id}']"):
                                 el.innerHTML = innerHTML
                                 if el.tagName in {'TEXTAREA', 'textarea'}:  # FIXME Только для этого тега это имеет смысл
@@ -270,6 +276,7 @@ class DomMorph(DomHtml):
                                 if id is not None and id != _id:
                                     el.id = str(id)
                         case "attrs", _id, id, dict(attrs) if _id is not None:
+                            # if (el := document.getElementById(str(_id))):
                             for el in document.select(f"[id='{_id}']"):
                                 attrs = { k.replace('_', '-'): v for k, v in attrs.items() }
                                 
@@ -306,22 +313,33 @@ class DomMorph(DomHtml):
                                     el.id = str(id)
                                     
                         case "remove", _id, _, _ if _id is not None:
+                            # if (el := document.getElementById(str(_id))):
                             for el in document.select(f"[id='{_id}']"):
                                 el.remove()
+
+                                
                         case "afterbegin", _id, id, str(outerHTML) if _id is not None:
+                            # if (el := document.getElementById(str(_id))):
                             for el in document.select(f"[id='{_id}']"):
-                                el.insertAdjacentHTML('afterbegin', outerHTML)
-                                if id is not None and id != _id:
-                                    el.id = str(id)
+                                if el not in _afterbegin:
+                                    el.insertAdjacentHTML('afterbegin', outerHTML)
+                                    if id is not None and id != _id:
+                                        el.id = str(id)
+                                    _afterbegin.add(el)
+                                    
                         case "beforeend", _id, id, str(outerHTML) if _id is not None:
+                            # if (el := document.getElementById(str(_id))):
                             for el in document.select(f"[id='{_id}']"):
-                                el.insertAdjacentHTML('beforeend', outerHTML)
-                                if id is not None and id != _id:
-                                    el.id = str(id)                
+                                if el not in _beforeend:
+                                    el.insertAdjacentHTML('beforeend', outerHTML)
+                                    if id is not None and id != _id:
+                                        el.id = str(id)
+                                    _beforeend.add(el)
 
                 # FIXME Когда меняются аттрибуты и id браузер не хочет корректно пересчитать стили без "пинка"
                 node = document.createTextNode(""); document.body.appendChild(node); _ = document.body.offsetHeight; document.body.removeChild(node)
 
+                console.timeEnd("Dom Morphing time:")
 
             def _open(ev):
                 global morphhash;  # Этот код при инжекции во фронт-энд попадает как глобальный код (без строки декларации функции)
