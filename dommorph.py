@@ -324,20 +324,20 @@ class DomMorph(DomHtml):
                         case "afterbegin", _id, id, str(outerHTML) if _id is not None:
                             idselector = f"[id='{_id}']"
                             for el in document.select(idselector):
-                                if idselector not in _afterbegin:
+                                if el not in _afterbegin:
                                     el.insertAdjacentHTML('afterbegin', outerHTML)
                                     if id is not None and id != _id:
                                         ids.append( (idselector, id) )
-                                    _afterbegin.add(idselector)
+                                    _afterbegin.add(el)
                                     
                         case "beforeend", _id, id, str(outerHTML) if _id is not None:
                             idselector = f"[id='{_id}']"
                             for el in document.select(idselector):
-                                if idselector not in _beforeend:
+                                if el not in _beforeend:
                                     el.insertAdjacentHTML('beforeend', outerHTML)
                                     if id is not None and id != _id:
                                         ids.append( (idselector, id) )
-                                    _beforeend.add(idselector)
+                                    _beforeend.add(el)
 
 
                 for idselector, id in ids:
