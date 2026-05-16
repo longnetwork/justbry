@@ -260,24 +260,28 @@ class DomMorph(DomHtml):
                 if not data: return
 
                 _afterbegin = set(); _beforeend = set();  # FIXME для обхода дубликатов id
+
+                ids = [];       # Из-за возможной смены id требуется два прохода (со сменой id во втором отдельном проходе: el.id = str(id))
                 
-                for d in data:                            # FIXME select через атрибут для браузера тяжелее чем выборка по уникальному id
+                for d in data:  # FIXME select через атрибут для браузера тяжелее чем выборка по уникальному id (document.getElementById(str(_id)))
                     match d:
                         case "outerHTML", _id, _, str(outerHTML) if _id is not None:  # outerHTML уже содержит новый id
-                            # if (el := document.getElementById(str(_id))):
-                            for el in document.select(f"[id='{_id}']"):
+                            idselector = f"[id='{_id}']"
+                            for el in document.select(idselector):
                                 el.outerHTML = outerHTML
+                                
                         case "innerHTML", _id, id, str(innerHTML) if _id is not None:
-                            # if (el := document.getElementById(str(_id))):
-                            for el in document.select(f"[id='{_id}']"):
+                            idselector = f"[id='{_id}']"
+                            for el in document.select(idselector):
                                 el.innerHTML = innerHTML
                                 if el.tagName in {'TEXTAREA', 'textarea'}:  # FIXME Только для этого тега это имеет смысл
                                     el.value = innerHTML
                                 if id is not None and id != _id:
-                                    el.id = str(id)
+                                    ids.append( (idselector, id) )
+                                
                         case "attrs", _id, id, dict(attrs) if _id is not None:
-                            # if (el := document.getElementById(str(_id))):
-                            for el in document.select(f"[id='{_id}']"):
+                            idselector = f"[id='{_id}']"
+                            for el in document.select(idselector):
                                 attrs = { k.replace('_', '-'): v for k, v in attrs.items() }
                                 
                                 for k, v in list(el.attrs.items()):
@@ -310,31 +314,36 @@ class DomMorph(DomHtml):
                                         setattr(el, k, v)
                                     
                                 if id is not None and id != _id:
-                                    el.id = str(id)
+                                    ids.append( (idselector, id) )
                                     
                         case "remove", _id, _, _ if _id is not None:
-                            # if (el := document.getElementById(str(_id))):
-                            for el in document.select(f"[id='{_id}']"):
+                            idselector = f"[id='{_id}']"
+                            for el in document.select(idselector):
                                 el.remove()
-
                                 
                         case "afterbegin", _id, id, str(outerHTML) if _id is not None:
-                            # if (el := document.getElementById(str(_id))):
-                            for el in document.select(f"[id='{_id}']"):
-                                if el not in _afterbegin:
+                            idselector = f"[id='{_id}']"
+                            for el in document.select(idselector):
+                                if idselector not in _afterbegin:
                                     el.insertAdjacentHTML('afterbegin', outerHTML)
                                     if id is not None and id != _id:
-                                        el.id = str(id)
-                                    _afterbegin.add(el)
+                                        ids.append( (idselector, id) )
+                                    _afterbegin.add(idselector)
                                     
                         case "beforeend", _id, id, str(outerHTML) if _id is not None:
-                            # if (el := document.getElementById(str(_id))):
-                            for el in document.select(f"[id='{_id}']"):
-                                if el not in _beforeend:
+                            idselector = f"[id='{_id}']"
+                            for el in document.select(idselector):
+                                if idselector not in _beforeend:
                                     el.insertAdjacentHTML('beforeend', outerHTML)
                                     if id is not None and id != _id:
-                                        el.id = str(id)
-                                    _beforeend.add(el)
+                                        ids.append( (idselector, id) )
+                                    _beforeend.add(idselector)
+
+
+                for idselector, id in ids:
+                    for el in document.select(idselector):
+                        el.id = str(id)
+                
 
                 # FIXME Когда меняются аттрибуты и id браузер не хочет корректно пересчитать стили без "пинка"
                 node = document.createTextNode(""); document.body.appendChild(node); _ = document.body.offsetHeight; document.body.removeChild(node)
