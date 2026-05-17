@@ -259,8 +259,6 @@ class DomMorph(DomHtml):
 
                 if not data: return
 
-                _afterbegin = set(); _beforeend = set();  # FIXME для обхода дубликатов id
-
                 ids = [];       # Из-за возможной смены id требуется два прохода (со сменой id во втором отдельном проходе: el.id = str(id))
                 
                 for d in data:  # FIXME select через атрибут для браузера тяжелее чем выборка по уникальному id (document.getElementById(str(_id)))
@@ -276,8 +274,7 @@ class DomMorph(DomHtml):
                                 el.innerHTML = innerHTML
                                 if el.tagName in {'TEXTAREA', 'textarea'}:  # FIXME Только для этого тега это имеет смысл
                                     el.value = innerHTML
-                                if id is not None and id != _id:
-                                    ids.append( (idselector, id) )
+                            if id is not None and id != _id: ids.append( (idselector, id) )
                                 
                         case "attrs", _id, id, dict(attrs) if _id is not None:
                             idselector = f"[id='{_id}']"
@@ -313,8 +310,7 @@ class DomMorph(DomHtml):
                                     if k in {'value', }:
                                         setattr(el, k, v)
                                     
-                                if id is not None and id != _id:
-                                    ids.append( (idselector, id) )
+                            if id is not None and id != _id: ids.append( (idselector, id) )
                                     
                         case "remove", _id, _, _ if _id is not None:
                             idselector = f"[id='{_id}']"
@@ -324,21 +320,14 @@ class DomMorph(DomHtml):
                         case "afterbegin", _id, id, str(outerHTML) if _id is not None:
                             idselector = f"[id='{_id}']"
                             for el in document.select(idselector):
-                                if el not in _afterbegin:
-                                    el.insertAdjacentHTML('afterbegin', outerHTML)
-                                    if id is not None and id != _id:
-                                        ids.append( (idselector, id) )
-                                    _afterbegin.add(el)
+                                el.insertAdjacentHTML('afterbegin', outerHTML)
+                            if id is not None and id != _id: ids.append( (idselector, id) )
                                     
                         case "beforeend", _id, id, str(outerHTML) if _id is not None:
                             idselector = f"[id='{_id}']"
                             for el in document.select(idselector):
-                                if el not in _beforeend:
-                                    el.insertAdjacentHTML('beforeend', outerHTML)
-                                    if id is not None and id != _id:
-                                        ids.append( (idselector, id) )
-                                    _beforeend.add(el)
-
+                                el.insertAdjacentHTML('beforeend', outerHTML)
+                            if id is not None and id != _id: ids.append( (idselector, id) )
 
                 for idselector, id in ids:
                     for el in document.select(idselector):
@@ -485,8 +474,14 @@ class DomMorph(DomHtml):
                     bodycopy = bodycopy or deepcopy(self.body);  # Однократная deepcopy
                     
                     diffs = list(self.compare_dom(bodycopy, _body))
-                    if diffs:                        
-                        updates.append(socket.send_text( base64.b64encode(gzip.compress(json.dumps(diffs).encode())).decode() ))
+                    if diffs:
+                        # Просев дубликатов
+                        udiffs = []
+                        for d in diffs:
+                            if d not in udiffs:
+                                udiffs.append(d)
+                        
+                        updates.append(socket.send_text( base64.b64encode(gzip.compress(json.dumps(udiffs).encode())).decode() ))
                         
                     # morphhash менять нельзя, чтобы работала очистка self.responses при закрытии сокета
                     # То есть morphhash - это первый хешь при первой отдачи response на сторону браузера
