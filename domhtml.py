@@ -268,6 +268,16 @@ class Tag:
             return ( hash(self.tag) * 961 + hash(self.literal) * 31 + hash(self.id) ) % 2305843009213693951
             
 
+    def eql(self, other):  # Сравнение без учета идентификаторов
+        if not isinstance(other, Tag): return False
+        
+        if self.tag in {Tag.NODE_TEXT, Tag.SCRIPT_TEXT}:
+            return self.literal == other.literal
+        else:
+            return (self.tag == other.tag) and (self.literal == other.literal)
+        
+        
+
 class Cmp(Tag):
     """
         Компонент с родителем и дочерней структурой. У каждого есть статический тег
@@ -518,6 +528,15 @@ class Cmp(Tag):
 
         return result
         
+    def eql(self, other):  # Сравнение без учета идентификаторов
+        """
+            XXX Помним что bool(self) это фактически bool(len(self)) при перегруженном __len__ - при пустых childs возвращает False
+        """
+        if not super().eql(other):
+            return False
+
+        return not any( not (isinstance(o, Tag) and c.eql(o)) for c, o in itertools.zip_longest(self._childs, other._childs) )
+
 
     def _get_dom(self):
         """
