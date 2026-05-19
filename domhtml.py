@@ -402,6 +402,10 @@ class Cmp(Tag):
         """
         
         if isinstance(cmp, Cmp):
+            if cmp.tag in {Tag.NODE_TEXT, Tag.SCRIPT_TEXT}:
+                if self.tag not in {'script', 'style', }:
+                    if cmp.literal is not None:
+                        cmp.set_attrs(html_escape(cmp.literal))            
             return cmp
             
         if isinstance(cmp, str):

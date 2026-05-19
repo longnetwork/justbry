@@ -157,7 +157,7 @@ class DomView(DomReact):
         self.wnotify.tzoffset = req.event.get('tzoffset', self.wnotify.tzoffset)
 
         await self.wnotify.notificate(
-            f"language={self.wnotify.language}, tzoffset={self.wnotify.tzoffset}, timestamp={int(time())}",
+            f"<b>language</b>={self.wnotify.language}, <b>tzoffset</b>={self.wnotify.tzoffset}, <b>timestamp</b>={int(time())}",
             accent = random.choice(["is-link is-light", "is-primary is-light", "is-info is-light", "is-success is-light", "is-warning is-light", "is-danger is-light"])
         )
 
