@@ -47,7 +47,7 @@ dom = DomHtml(
             )
         ),
         Cmp('div', classes="field")(
-            Cmp('input', classes="input", type="text", placeholder="Your Name")
+            Cmp('input', classes="input", type="text", placeholder="<Your Name>")
         ),
         Cmp('div', classes="field")(
             Cmp('div', classes="select")(
@@ -59,12 +59,12 @@ dom = DomHtml(
             Cmp('a', classes="button is-danger is-soft")("Cancel"),
         ),
         
-        "Lorem Ipsum", "Lorem Ipsum",
-        Cmp('text', "Lorem Ipsum"), Cmp('text', "Lorem Ipsum"),
+        "Lorem Ipsum", "<Lorem Ipsum>",
+        Cmp('text', "Lorem Ipsum"), Cmp('text', "<Lorem Ipsum>"),
 
         Cmp('textarea', classes="textarea")("""
             Lorem Ipsum
-            Lorem Ipsum
+            <Lorem Ipsum>
         """),
     ),
 

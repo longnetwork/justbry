@@ -37,6 +37,7 @@
 
 import itertools, inspect, textwrap as tw, weakref
 
+from html import escape as html_escape, unescape as html_unescape
 
 from . import HTMLResponse
 
@@ -72,7 +73,7 @@ class Tag:
 
     class Attrs:
         """
-            Дескриптор данных для для доступа к атрибутам в форме cmp.attrs.<name>
+            Дескриптор данных для доступа к атрибутам в форме cmp.attrs.<name>
         """
         class Proxy:
             __slots__ = [
@@ -165,7 +166,7 @@ class Tag:
             self.attrs.id = value
         elif name == 'text':
             if self.tag in {Tag.NODE_TEXT, Tag.SCRIPT_TEXT}:
-                self.attrs.literal = value
+                self.attrs.literal = html_escape(value)
             else:
                 raise AttributeError(f"'{type(self).__name__}' object has no attribute '{name}'")
         else:
@@ -174,7 +175,7 @@ class Tag:
     def __getattr__(self, name):
         if name == 'text':
             if self.tag in {Tag.NODE_TEXT, Tag.SCRIPT_TEXT}:
-                return self.attrs.literal
+                return html_unescape(self.attrs.literal)
         raise AttributeError(f"'{type(self).__name__}' object has no attribute '{name}'")
         
     
@@ -187,12 +188,12 @@ class Tag:
         parts = []
         for k, v in attrs.items():
             if k == 'literal':
-                # parts.append(tw.dedent(str(v)))
+                # FIXME не различимо text / script / style, поэтому escape через псевдо-атрибут .text (где важно и обратное unescape)
+                # Сырой без экранирования контекст по прежнему доступен для задания через длинное обращение `.attrs.literal = ...`
                 parts.append(str(v))
                 continue
 
             if k in {'classes', 'class', 'className'}:
-                # parts.append(f'class="{tw.dedent(str(v))}"')
                 parts.append(f'class="{str(v)}"')
                 continue
                 
@@ -203,12 +204,10 @@ class Tag:
                 continue
                 
             if isinstance(v, str):
-                # parts.append(f'{k}="{tw.dedent(v)}"')
-                parts.append(f'{k}="{v}"')
+                parts.append(f'{k}="{html_escape(v)}"')
                 continue
 
-            # parts.append(f'{k}={tw.dedent("repr(v)")}')
-            parts.append(f'{k}="{repr(v)}"')
+            parts.append(f'{k}="{html_escape(repr(v))}"')
 
         return ' '.join(parts)
 
@@ -222,7 +221,7 @@ class Tag:
             return literal
         else:
             if tag_id is not None:
-                tag_id = f'id="{str(tag_id)}"' if not isinstance(tag_id, str) else f'id={tag_id}'
+                tag_id = f'id="{str(tag_id)}"' if not isinstance(tag_id, str) else f'id="{tag_id}"'
             else:
                 tag_id = ''
             
@@ -337,7 +336,6 @@ class Cmp(Tag):
 
         self._parent = None
         self._childs = []
-
 
     def __deepcopy__(self, memo):
         inst = Cmp.__new__(Cmp)

@@ -10,7 +10,7 @@ h11==0.16.0
 idna==3.10
 isort==6.1.0
 itsdangerous==2.2.0
--e git+https://github.com/longnetwork/justbry.git@41c429334a0df50dc96d640ceb5a96016494daa7#egg=justbry
+-e git+https://github.com/longnetwork/justbry.git@1a37cfe1c5ff8df9042cd4bf7f4bde1f1eda1ede#egg=justbry
 mccabe==0.7.0
 platformdirs==4.4.0
 pycodestyle==2.14.0
