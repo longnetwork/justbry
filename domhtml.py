@@ -202,6 +202,14 @@ class Tag:
             if isinstance(v, bool):
                 if v: parts.append(k)
                 continue
+
+            # Здесь те атрибуты которые игнорируют автоматическое escape
+
+            if k.startswith("on"):
+                parts.append(f'{k}="{str(v)}"')
+                continue
+
+            # Здесь могут быть data-атрибуты и они должны быть escaped
                 
             if isinstance(v, str):
                 parts.append(f'{k}="{html_escape(v)}"')
@@ -330,7 +338,6 @@ class Cmp(Tag):
         if 'literal' in attrs:
             attrs['literal'] =  self._to_script(attrs['literal'])
         
-
         super().__init__(tag, literal, **attrs)
 
 
@@ -389,13 +396,17 @@ class Cmp(Tag):
 
         return tw.dedent(source[pos + 1:].strip('\r\n'))
 
-
-    @staticmethod
-    def _to_component(cmp):
+    def _to_component(self: "parent", cmp):
+        """
+            В точках вызова _to_component() возвращает всегда дочернюю ноду, при этом self - это родитель
+        """
+        
         if isinstance(cmp, Cmp):
             return cmp
             
         if isinstance(cmp, str):
+            if self.tag not in {'script', 'style', }:  
+                cmp = html_escape(cmp)
             return Cmp(Tag.NODE_TEXT, cmp)
 
         if callable(cmp):
