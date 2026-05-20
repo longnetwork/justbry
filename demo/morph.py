@@ -92,10 +92,10 @@ async def morphing(_app):
 
 
                 if (cnt // 8) % 2 == 0:
-                    dlist[0].insert(0, Cmp('li')(f"-{cnt & 7} Lorem Ipsum"))
+                    dlist[0].insert(0, Cmp('li')(f"-{cnt & 7} <Lorem Ipsum>"))
                     # dlist[0].insert(0, Cmp('li')(f"- Lorem Ipsum"))
                     
-                    dlist[0].append(Cmp('li')(f"+{cnt & 7} Lorem Ipsum"))
+                    dlist[0].append(Cmp('li')(f"+{cnt & 7} <Lorem Ipsum>"))
                     # dlist[0].append(Cmp('li')(f"+ Lorem Ipsum"))
                     
                 else:

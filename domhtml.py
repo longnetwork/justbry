@@ -34,10 +34,11 @@
     FIXME нужна оптимизация через lru_cache для рендеров/вычислений хешей/для всего рекурсивного...
 
 """
+# pylint: disable=W1117
 
 import itertools, inspect, textwrap as tw, weakref
 
-from html import escape as html_escape, unescape as html_unescape
+from html import escape as html_escape
 
 from . import HTMLResponse
 
@@ -59,9 +60,8 @@ class Tag:
         '!doctype', '!DOCTYPE', '!--',
     }
 
-    NODE_TEXT = 'text'
-    SCRIPT_TEXT = 'python'
-
+    NODE_TEXT = 'text';  # XXX В html такого тега не существует
+    
     __slots__ = [
         'tag',
         '_attrs',  # Значение в инстанце для дескриптора attrs
@@ -74,7 +74,12 @@ class Tag:
     class Attrs:
         """
             Дескриптор данных для доступа к атрибутам в форме cmp.attrs.<name>
+
+            FIXME:
+                Доступ через дескриптор (через upd_attrs со словарем параметров) "передергивает" NODE_TEXT без escaped!
+                Всегда есть выбора как изменять literal NODE_TEXT: через `.text` или через `.attrs.literal` для "сырого" рендера                   
         """
+        
         class Proxy:
             __slots__ = [
                 'tag'
@@ -96,7 +101,7 @@ class Tag:
     attrs = Attrs()
     
     
-    def __init__(self, tag, literal=None, **attrs):
+    def __init__(self, tag, literal=None, /, **attrs):
         """
             Строковое представление тега создается сразу для возможности кеширования рендера DOM
             Ре-ререндер тега возможен путем замена ссылки на него на новый созданный тег
@@ -115,26 +120,31 @@ class Tag:
 
         self.set_attrs(literal, **attrs)
 
-    def set_attrs(self, literal=None, **attrs):
+    def set_attrs(self, literal=None, /, **attrs):
         """
             Каждый раз готовит новое строковое представление частей тега в html
+            Если literal передается не как ключевой параметр, то это повод включить для него escape,
+            а если как literal=... то он попадает в attrs и escape выключено
+            
         """
         literal_is_dict = isinstance(literal, dict)
         assert not (literal_is_dict and attrs)
         if literal_is_dict: attrs = literal; literal = None
 
-        
         attrs = attrs.copy()
         
         if literal is not None:
             attrs['literal'] = literal
+            escaped = True
+        else:
+            escaped = False
 
         if 'id' in attrs:
             object.__setattr__(self, 'id', attrs.pop('id'))
 
-        self.literal = self._literal(**attrs);                    # Без id
+        self.literal = self._literal(escaped, **attrs);  # Без id
         
-        self.otag = self._otag(self.tag, self.literal, self.id);  # С id если tag не NODE_TEXT
+        self.otag = self._otag(self.tag, self.literal, self.id);                 # С id если tag не NODE_TEXT
         self.ctag = self._ctag(self.tag)
 
         self._attrs = attrs
@@ -145,7 +155,7 @@ class Tag:
         """
         return self._attrs
 
-    def upd_attrs(self, literal=None, **attrs):
+    def upd_attrs(self, literal=None, /, **attrs):
         
         literal_is_dict = isinstance(literal, dict)
         assert not (literal_is_dict and attrs)
@@ -153,20 +163,18 @@ class Tag:
 
         _attrs = self.get_attrs(); _attrs.update(attrs)
 
-        if literal is not None:
-            _attrs.update(literal=literal)
-
-        self.set_attrs(**_attrs)
+        self.set_attrs(literal, **_attrs)
                 
     def __setattr__(self, name, value):
         """
             Сокращение доступа без .attrs. к некоторым служебным атрибутам
+            .text - форсирует escape, .attrs.literal - без escape
         """
         if name == 'id':
-            self.attrs.id = value
+            self.upd_attrs(id=value)
         elif name == 'text':
-            if self.tag in {Tag.NODE_TEXT, Tag.SCRIPT_TEXT}:
-                self.attrs.literal = html_escape(value)
+            if self.tag in {Tag.NODE_TEXT}:
+                self.upd_attrs(value);                   # Форсированное включение escape
             else:
                 raise AttributeError(f"'{type(self).__name__}' object has no attribute '{name}'")
         else:
@@ -174,13 +182,13 @@ class Tag:
 
     def __getattr__(self, name):
         if name == 'text':
-            if self.tag in {Tag.NODE_TEXT, Tag.SCRIPT_TEXT}:
-                return html_unescape(self.attrs.literal)
+            if self.tag in {Tag.NODE_TEXT}:
+                return self.get_attrs().get('literal');  # Здесь всегда unescaped оригинал
         raise AttributeError(f"'{type(self).__name__}' object has no attribute '{name}'")
         
     
     @staticmethod
-    def _literal(**attrs):
+    def _literal(escaped=False, /, **attrs):
         """
             Рендер того что внутри тега после имени и до закрывающей скобки
         """
@@ -188,9 +196,11 @@ class Tag:
         parts = []
         for k, v in attrs.items():
             if k == 'literal':
-                # FIXME не различимо text / script / style, поэтому escape через псевдо-атрибут .text (где важно и обратное unescape)
-                # Сырой без экранирования контекст по прежнему доступен для задания через длинное обращение `.attrs.literal = ...`
-                parts.append(str(v))
+                # для script / style escaped не нужно (внутри этих тегов literal - всегда от NODE_TEXT)
+                if escaped:
+                    parts.append(html_escape(str(v)))
+                else:
+                    parts.append(str(v))
                 continue
 
             if k in {'classes', 'class', 'className'}:
@@ -209,7 +219,7 @@ class Tag:
                 parts.append(f'{k}="{str(v)}"')
                 continue
 
-            # Здесь могут быть data-атрибуты и они должны быть escaped
+            # Здесь могут быть data-атрибуты и они обязаны быть escaped
                 
             if isinstance(v, str):
                 parts.append(f'{k}="{html_escape(v)}"')
@@ -225,7 +235,7 @@ class Tag:
         """
             Рендер открывающего тега
         """
-        if tag in {Tag.NODE_TEXT, Tag.SCRIPT_TEXT}:
+        if tag in {Tag.NODE_TEXT}:
             return literal
         else:
             if tag_id is not None:
@@ -250,7 +260,7 @@ class Tag:
         """
             Рендер закрывающего тега
         """
-        if tag in {Tag.NODE_TEXT, Tag.SCRIPT_TEXT}:
+        if tag in {Tag.NODE_TEXT}:
             return ''
         else:
             if tag in Tag.self_closing_tags:
@@ -262,13 +272,13 @@ class Tag:
     def __eq__(self, other):        
         if not isinstance(other, Tag): return False
         
-        if self.tag in {Tag.NODE_TEXT, Tag.SCRIPT_TEXT}:
+        if self.tag in {Tag.NODE_TEXT}:
             return self.literal == other.literal
         else:
             return (self.tag == other.tag) and (self.literal == other.literal) and (self.id == other.id)
 
     def __hash__(self):
-        if self.tag in {Tag.NODE_TEXT, Tag.SCRIPT_TEXT}:
+        if self.tag in {Tag.NODE_TEXT}:
             return hash(self.literal)
         else:
             # sys.hash_info.modulus == 2**61-1
@@ -278,7 +288,7 @@ class Tag:
     def eql(self, other):  # Сравнение без учета идентификаторов
         if not isinstance(other, Tag): return False
         
-        if self.tag in {Tag.NODE_TEXT, Tag.SCRIPT_TEXT}:
+        if self.tag in {Tag.NODE_TEXT}:
             return self.literal == other.literal
         else:
             return (self.tag == other.tag) and (self.literal == other.literal)
@@ -325,7 +335,7 @@ class Cmp(Tag):
         '_childs',
     ]
 
-    def __init__(self, tag, literal=None, **attrs):
+    def __init__(self, tag, literal=None, /, **attrs):
         
         literal_is_dict = isinstance(literal, dict)
         assert not (literal_is_dict and attrs)
@@ -333,10 +343,13 @@ class Cmp(Tag):
 
         if 'id' not in attrs:
             attrs.update(id=next(Cmp.id_count))
-            
-        literal = self._to_script(literal)
+
+        # XXX __init__ не возможно вызвать с literal и в позиционных и в ключевых одновременно
+        
         if 'literal' in attrs:
             attrs['literal'] =  self._to_script(attrs['literal'])
+        elif literal is not None:
+            literal = self._to_script(literal)
         
         super().__init__(tag, literal, **attrs)
 
@@ -399,28 +412,29 @@ class Cmp(Tag):
     def _to_component(self: "parent", cmp):
         """
             В точках вызова _to_component() возвращает всегда дочернюю ноду, при этом self - это родитель
+            Здесь можем автоматически определить необходимость escape (по родителю)
         """
         
         if isinstance(cmp, Cmp):
-            if cmp.tag in {Tag.NODE_TEXT, Tag.SCRIPT_TEXT}:
-                if self.tag not in {'script', 'style', }:
-                    if cmp.literal is not None:
-                        cmp.set_attrs(html_escape(cmp.literal))            
+            if cmp.tag in {Tag.NODE_TEXT}:  # Cmp уже создан через literal и он уже escaped
+                if self.tag in {'script', 'style', }:
+                    cmp.upd_attrs(literal=cmp.get_attrs().get('literal'));  # Передернуть без escape         
             return cmp
             
         if isinstance(cmp, str):
             if self.tag not in {'script', 'style', }:  
-                cmp = html_escape(cmp)
-            return Cmp(Tag.NODE_TEXT, cmp)
+                return Cmp(Tag.NODE_TEXT, cmp);                             # escaped
+            else:
+                return Cmp(Tag.NODE_TEXT, literal=cmp);                     # unescaped
 
         if callable(cmp):
-            return Cmp(Tag.SCRIPT_TEXT, cmp)
+            return Cmp(Tag.NODE_TEXT, literal=cmp)
             
         raise TypeError(f"{cmp} of unsupported type")
         
 
     def append(self, cmp):                  # list метод
-        assert self.tag not in {Tag.NODE_TEXT, Tag.SCRIPT_TEXT};  # Эти не могут иметь дочерние
+        assert self.tag not in {Tag.NODE_TEXT};  # Эти не могут иметь дочерние
         self._childs.append(c := self._to_component(cmp)); c._parent = weakref.proxy(self)
 
     
@@ -447,7 +461,7 @@ class Cmp(Tag):
         return self._childs[child_idx]
         
     def __setitem__(self, child_idx, cmp):  # list метод
-        assert self.tag not in {Tag.NODE_TEXT, Tag.SCRIPT_TEXT};  # Эти не могут иметь дочерние
+        assert self.tag not in {Tag.NODE_TEXT};  # Эти не могут иметь дочерние
         self._childs[child_idx] = (c := self._to_component(cmp)); c._parent = weakref.proxy(self)
         
     def __delitem__(self, child_idx):       # list метод
@@ -459,7 +473,7 @@ class Cmp(Tag):
 
 
     def insert(self, idx, cmp):             # list метод
-        assert self.tag not in {Tag.NODE_TEXT, Tag.SCRIPT_TEXT};  # Эти не могут иметь дочерние
+        assert self.tag not in {Tag.NODE_TEXT};  # Эти не могут иметь дочерние
         self._childs.insert(idx, c := self._to_component(cmp)); c._parent = weakref.proxy(self)
 
         

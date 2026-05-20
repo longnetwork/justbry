@@ -94,7 +94,7 @@ class DomMorph(DomHtml):
                 Текстовые компоненты (как содержимое) желательно оборачивать в нейтральные тэги.
         """
 
-        if cmp.tag in {Cmp.NODE_TEXT, Cmp.SCRIPT_TEXT} or _cmp.tag in {Cmp.NODE_TEXT, Cmp.SCRIPT_TEXT}:
+        if cmp.tag in {Cmp.NODE_TEXT} or _cmp.tag in {Cmp.NODE_TEXT}:
             # У этих тегов нет дочерних и атрибутов. literal у них это не атрибуты а содержимое
             
             # Текстовая нода и их может быть много в родителе и они не имеют id, - поэтому
