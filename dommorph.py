@@ -294,7 +294,6 @@ class DomMorph(DomHtml):
                                     if k == 'data-props':
                                         for k, v in v.items():
                                             setattr(el, k, v)
-                                        el.attrs['data-props'] = v
                                         continue
 
                                     if isinstance(v, bool):
