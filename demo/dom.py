@@ -10,16 +10,16 @@ from justbry.domhtml import DomHtml, Cmp
 def helloworld1():
     # pylint: disable=E0401
     
-    import aux;  # импорт в браузере запросом к StaticFiles
-    aux.helloworld()
+    import auxbry;  # импорт в браузере запросом к StaticFiles
+    auxbry.helloworld()
 
 @DomHtml.brython
 def helloworld2(cnt=2):
     # pylint: disable=E0401
     
-    import aux;  # импорт в браузере запросом к StaticFiles
+    import auxbry;  # импорт в браузере запросом к StaticFiles
     for _ in range(cnt):
-        aux.helloworld()
+        auxbry.helloworld()
 
 
 dom = DomHtml(
