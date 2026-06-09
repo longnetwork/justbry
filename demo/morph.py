@@ -80,15 +80,15 @@ async def morphing(_app):
                 box[0].attrs.checked = not box[0].attrs.checked
 
                 
-                rline_literal = rline[0][0].text
-                rline_literal = rline_literal[-1] + rline_literal[:-1]
+                rline_text = rline[0][0].text
+                rline_text = rline_text[-1] + rline_text[:-1]
 
-                if cnt % 4 == 0: rline[0] = Cmp('b')(rline_literal)
-                if cnt % 8 == 0: rline[0] = Cmp('i')(rline_literal)
-                if cnt % 12 == 0: rline[0] = Cmp('s')(rline_literal)
-                if cnt % 16 == 0: rline[0] = Cmp('p')(rline_literal)
+                if cnt % 4 == 0: rline[0] = Cmp('b')(rline_text)
+                if cnt % 8 == 0: rline[0] = Cmp('i')(rline_text)
+                if cnt % 12 == 0: rline[0] = Cmp('s')(rline_text)
+                if cnt % 16 == 0: rline[0] = Cmp('p')(rline_text)
                     
-                rline[0][0].text = rline_literal
+                rline[0][0].text = rline_text
 
 
                 if (cnt // 8) % 2 == 0:

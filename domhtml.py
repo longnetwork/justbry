@@ -142,7 +142,8 @@ class Tag:
         if 'id' in attrs:
             object.__setattr__(self, 'id', attrs.pop('id'))
 
-        self.literal = self._literal(escaped, **attrs);  # Без id
+        # self.literal = self._literal(escaped, **attrs);  # Без id
+        object.__setattr__(self, 'literal', self._literal(escaped, **attrs))
         
         self.otag = self._otag(self.tag, self.literal, self.id);                 # С id если tag не NODE_TEXT
         self.ctag = self._ctag(self.tag)
@@ -170,6 +171,9 @@ class Tag:
             Сокращение доступа без .attrs. к некоторым служебным атрибутам
             .text - форсирует escape, .attrs.literal - без escape
         """
+        if name == 'literal':  # Запрещенный аттрибут для прямой модификации
+            raise AttributeError(f"'{type(self).__name__}' attribute do not change directly '{name}'")
+            
         if name == 'id':
             self.upd_attrs(id=value)
         elif name == 'text':
@@ -363,7 +367,7 @@ class Cmp(Tag):
         self_base = super()
 
         for slot in self_base.__slots__:
-            setattr(inst, slot, getattr(self_base, slot))
+            object.__setattr__(inst, slot, getattr(self_base, slot))
 
         inst._parent = self._parent;  # Заменится на верхнем уровне дерева на копию родителя
         inst._childs = [c.__deepcopy__(memo) for c in self._childs]
