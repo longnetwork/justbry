@@ -645,7 +645,7 @@ class DomHtml(Cmp):
 
         version = str(version) if version is not None else version
         
-        brydefer = kwargs.get('brydefer', True)
+        deferbry = kwargs.get('deferbry', True)
         
         super().__init__('!DOCTYPE', "html")
 
@@ -660,9 +660,9 @@ class DomHtml(Cmp):
 
                 Cmp('meta', name="version", content=f"{version}" if version else ""),
 
-                Cmp('script', src = static + "brython.min.js" + (f"?v={version}" if version else ""), defer=brydefer),
-                libbry := Cmp('script', src = static + "brython_stdlib.min.js" + (f"?v={version}" if version else ""), defer=brydefer),
-                # libbry := Cmp('script', src = static + "brython_modules.js" + (f"?v={version}" if version else ""), defer=brydefer),
+                Cmp('script', src = static + "brython.min.js" + (f"?v={version}" if version else ""), defer=deferbry),
+                libbry := Cmp('script', src = static + "brython_stdlib.min.js" + (f"?v={version}" if version else ""), defer=deferbry),
+                # libbry := Cmp('script', src = static + "brython_modules.js" + (f"?v={version}" if version else ""), defer=deferbry),
 
                 Cmp('link', rel="stylesheet", href = static + "bulma.min.css" + (f"?v={version}" if version else "")),
                 
