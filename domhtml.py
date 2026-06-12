@@ -688,12 +688,9 @@ class DomHtml(Cmp):
                      f"pythonpath: ['{(static + 'py_v=' + version) if version else (static + 'py')}'], "
                      f"}})"),  # Требуется отсечение '_v=version' со стороны starlette.staticfiles ( justbry.VersionMiddleware )
 
-                    tw.dedent("""
-                    function applyTheme() {
-                        document.documentElement.setAttribute('data-theme', window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-                    }
-                    applyTheme();
-                    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
+                    ("""
+                    backlight = () => {document.documentElement.setAttribute('data-theme', window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');}
+                    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', backlight); backlight();
                     """),
                 )
             ),
