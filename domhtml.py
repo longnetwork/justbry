@@ -661,8 +661,8 @@ class DomHtml(Cmp):
                 Cmp('meta', name="version", content=f"{version}" if version else ""),
 
                 Cmp('script', src = static + "brython.min.js" + (f"?v={version}" if version else ""), defer=brydefer),
-                brylib := Cmp('script', src = static + "brython_stdlib.min.js" + (f"?v={version}" if version else ""), defer=brydefer),
-                # brylib := Cmp('script', src = static + "brython_modules.js" + (f"?v={version}" if version else ""), defer=brydefer),
+                libbry := Cmp('script', src = static + "brython_stdlib.min.js" + (f"?v={version}" if version else ""), defer=brydefer),
+                # libbry := Cmp('script', src = static + "brython_modules.js" + (f"?v={version}" if version else ""), defer=brydefer),
 
                 Cmp('link', rel="stylesheet", href = static + "bulma.min.css" + (f"?v={version}" if version else "")),
                 
@@ -708,7 +708,7 @@ class DomHtml(Cmp):
         if body_components:            
             self.body.add(*body_components)
 
-        self.brylib = brylib
+        self.libbry = libbry
 
     class brython:
         """
