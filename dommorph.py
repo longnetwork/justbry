@@ -272,8 +272,6 @@ class DomMorph(DomHtml):
                             idselector = f"[id='{_id}']"
                             for el in document.select(idselector):
                                 el.innerHTML = innerHTML
-                                if el.tagName in {'TEXTAREA', 'textarea'}:  # FIXME Только для этого тега это имеет смысл
-                                    el.value = innerHTML
                             if id is not None and id != _id: ids.append( (idselector, id) )
                                 
                         case "attrs", _id, id, dict(attrs) if _id is not None:
