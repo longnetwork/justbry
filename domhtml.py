@@ -77,7 +77,8 @@ class Tag:
 
             FIXME:
                 Доступ через дескриптор (через upd_attrs со словарем параметров) "передергивает" NODE_TEXT без escaped!
-                Всегда есть выбора как изменять literal NODE_TEXT: через `.text` или через `.attrs.literal` для "сырого" рендера                   
+                Всегда есть выбора как изменять literal NODE_TEXT: через `.text` или через
+                `.attrs.literal` | `.literal` для "сырого" рендера          
         """
         
         class Proxy:
@@ -169,10 +170,13 @@ class Tag:
     def __setattr__(self, name, value):
         """
             Сокращение доступа без .attrs. к некоторым служебным атрибутам
-            .text - форсирует escape, .attrs.literal - без escape
+            .text - форсирует escape, .attrs.literal (.literal) - без escape
         """
         if name == 'literal':  # Запрещенный аттрибут для прямой модификации
-            raise AttributeError(f"'{type(self).__name__}' attribute do not change directly '{name}'")
+            if self.tag in {Tag.NODE_TEXT}:
+                self.upd_attrs(literal=value);          # Без escape
+            else:
+                raise AttributeError(f"'{type(self).__name__}' attribute do not change directly '{name}'")
             
         if name == 'id':
             self.upd_attrs(id=value)

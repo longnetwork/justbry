@@ -97,13 +97,13 @@ class HSplitter(Cmp):
 
 
         self.add(
-            left := Cmp('div', classes="is-flex is-align-items-center is-justify-content-center", style=f"width: {divide};"),
+            left := Cmp('div', classes="box m-0 is-flex is-align-items-center is-justify-content-center", style=f"width: {divide};"),
             splitter := Cmp(
                 'div',
                 classes="is-flex has-background-light is-align-items-center",
                 style="width: 16px; height: 100%; cursor: col-resize; user-select: none;",
             ),
-            right := Cmp('div', classes="is-flex is-align-items-center is-justify-content-center is-flex-grow-1"),
+            right := Cmp('div', classes="box m-0 is-flex is-align-items-center is-justify-content-center is-flex-grow-1"),
 
             Cmp('script', type="text/python")(
                 f"import resizer; resizer.bind({splitter.id}, 'h')"
@@ -148,13 +148,13 @@ class VSplitter(Cmp):
 
 
         self.add(
-            top := Cmp('div', classes="is-flex is-justify-content-center is-align-items-center", style=f"height: {divide};"),
+            top := Cmp('div', classes="box m-0 is-flex is-justify-content-center is-align-items-center", style=f"height: {divide};"),
             splitter := Cmp(
                 'div',
                 classes="is-flex has-background-light is-justify-content-center",
                 style="width: 100%; height: 16px; cursor: row-resize; user-select: none;",
             ),
-            bottom := Cmp('div', classes="is-flex is-justify-content-center is-align-items-center is-flex-grow-1"),
+            bottom := Cmp('div', classes="box m-0 is-flex is-justify-content-center is-align-items-center is-flex-grow-1"),
 
             Cmp('script', type="text/python")(
                 f"import resizer; resizer.bind({splitter.id}, 'v')"

@@ -118,7 +118,7 @@ class DomView(DomReact):
             await asyncio.sleep(0.75)
         
         # self.info.text = f"login: {login}<br>password: {password}"
-        self.info.attrs.literal = f"login: {login}<br>password: {password}"
+        self.info.literal = f"login: {login}<br>password: {password}"
         self.button.dirty()
         
         await self.update()
