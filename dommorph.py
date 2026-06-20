@@ -349,7 +349,8 @@ class DomMorph(DomHtml):
                 if morphhash:
                     console.warn(f"Morpher Restore: {morphhash=}, Reload...")
                     morphhash = '';  # Раз у нас идет reload, то morphhash назначится после успешного редиректа новый
-                    timer.set_timeout(window.location.replace, int(RELOAD_TIMEOUT * 1000 / 3), window.location.href)
+                    # timer.set_timeout(window.location.replace, int(RELOAD_TIMEOUT * 1000 / 3), window.location.href)
+                    window.location.replace(window.location.href)
                     return
 
                 # Первичный запуск (обычная загрузка страницы)
