@@ -348,6 +348,7 @@ class DomMorph(DomHtml):
                 # Если это ПОВТОРНОЕ успешное открытие после сбоя (когда morphhash уже был заполнен ранее), то принудительно обновляем страницу
                 if morphhash:
                     console.warn(f"Morpher Restore: {morphhash=}, Reload...")
+                    morphhash = '';  # Раз у нас идет reload, то morphhash назначится после успешного редиректа новый
                     timer.set_timeout(window.location.replace, int(RELOAD_TIMEOUT * 1000 / 3), window.location.href)
                     return
 
@@ -381,7 +382,6 @@ class DomMorph(DomHtml):
                         href = ev.data[6:]
                         
                         morphhash = '_href_'               # Будет закрытие сокета без  location.replace()
-                        
                         window.location.assign(href)
                         return
                     
@@ -413,7 +413,7 @@ class DomMorph(DomHtml):
                     ws.bind('close', _close)
                     ws.bind('message', _message)
                 except Exception as e:
-                    console.warn(f"Morpher Down with {e}: {morphhash=}, Waiting...")
+                    console.error(f"Morpher Down with {e}: {morphhash=}, Waiting...")
                     # Если упало даже создание объекта, пробуем снова через таймаут
                     wsconnect_timer = timer.set_timeout(start_wsconnect_cycle, int(RELOAD_TIMEOUT * 1000 * 3))
 
