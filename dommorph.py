@@ -246,7 +246,9 @@ class DomMorph(DomHtml):
 
         if websocket.supported:  # WebSocket supported
             
-            ws = websocket.WebSocket(MORPHROUTE); morphhash = '';  # morphhash во фронт-энде в globals
+            ws = None; morphhash = '';  # morphhash во фронт-энде в globals
+            wsconnect_timer = None;             # Reconnect Time
+
 
             def morphing(data):    # Морфинг DOM
                 console.time("Dom Morphing time:")
@@ -338,8 +340,18 @@ class DomMorph(DomHtml):
                 console.timeEnd("Dom Morphing time:")
 
             def _open(ev):
-                global morphhash;  # Этот код при инжекции во фронт-энд попадает как глобальный код (без строки декларации функции)
-                
+                global morphhash, wsconnect_timer;  # Этот код при инжекции во фронт-энд попадает как глобальный код (без строки декларации функции)
+
+                # Если сокет успешно открылся, очищаем таймер реконнекта (на всякий случай)
+                if wsconnect_timer: timer.clear_timeout(wsconnect_timer); wsconnect_timer = None
+
+                # Если это ПОВТОРНОЕ успешное открытие после сбоя (когда morphhash уже был заполнен ранее), то принудительно обновляем страницу
+                if morphhash:
+                    console.warn(f"Morpher Restore: {morphhash=}, Reload...")
+                    timer.set_timeout(window.location.replace, int(RELOAD_TIMEOUT * 1000 / 3), window.location.href)
+                    return
+
+                # Первичный запуск (обычная загрузка страницы)
                 # ev.srcElement.send("_ping_")
                 el = document.getElementsByName("morphhash"); el = el and el[0]
                 if el:
@@ -348,16 +360,14 @@ class DomMorph(DomHtml):
                     console.info(f"Morpher open: {morphhash=}")
 
             def _close(_ev):
-                global morphhash;  # noqa
+                global morphhash, wsconnect_timer;  # noqa
+
+                if wsconnect_timer: timer.clear_timeout(wsconnect_timer); wsconnect_timer = None
                 
                 console.warn(f"Morpher Close: {morphhash=}")
 
-                # if morphhash and not morphhash.startswith('_href_'):
                 if not morphhash.startswith('_href_'):
-                    # window.location.reload(True)
-                    # window.location.assign(window.location.href)
-                    # window.location.replace(window.location.href)
-                    timer.set_timeout(window.location.replace, int(RELOAD_TIMEOUT * 1000), window.location.href)
+                    wsconnect_timer = timer.set_timeout(start_wsconnect_cycle, int(RELOAD_TIMEOUT * 1000))
 
             def _message(ev):
                 global morphhash
@@ -381,19 +391,46 @@ class DomMorph(DomHtml):
                 except Exception as e:
                     console.error("Dom Morphing:", e)
 
-        
-            ws.bind('open', _open)
-            ws.bind('close', _close)
-            ws.bind('message', _message)
+
+            def start_wsconnect_cycle():
+                """ Инициализация websocket и попытки подключения """
+                global ws, wsconnect_timer
+                
+                # Очищаем старый таймер, чтобы они не накладывались друг на друга
+                if wsconnect_timer: timer.clear_timeout(wsconnect_timer); wsconnect_timer = None
+
+                # Если сетевой интерфейс на ПК вообще выключен, не спамим впустую, - просто планируем следующую проверку
+                if hasattr(window.navigator, 'onLine') and not window.navigator.onLine:
+                    console.warn(f"Morpher Down with offLine: {morphhash=}, Waiting...")
+                    wsconnect_timer = timer.set_timeout(start_wsconnect_cycle, int(RELOAD_TIMEOUT * 1000))
+                    return
+
+                # Попытка создать новый WebSocket для проверки связи...
+                try:
+                    # Старый сокет умер, создаем абсолютно новый объект
+                    ws = websocket.WebSocket(MORPHROUTE)
+                    ws.bind('open', _open)
+                    ws.bind('close', _close)
+                    ws.bind('message', _message)
+                except Exception as e:
+                    console.warn(f"Morpher Down with {e}: {morphhash=}, Waiting...")
+                    # Если упало даже создание объекта, пробуем снова через таймаут
+                    wsconnect_timer = timer.set_timeout(start_wsconnect_cycle, int(RELOAD_TIMEOUT * 1000 * 3))
+
+            start_wsconnect_cycle();  # Первый коннект при загрузке страницы
+
+            # Дополнительная страховка: если включили кабель/Wi-Fi, мгновенно пинаем реконнект, не дожидаясь таймера
+            try: window.bind('online', lambda ev: start_wsconnect_cycle())
+            except: pass
 
             # Это необходимо что бы закрытие сокета шло до того как пойдет новый запрос при обновлении страницы
             # (Chromium подглючивает на этом месте: https://issues.chromium.org/issues/40839988)
             def _beforeunload(_ev):
-                global morphhash;  # noqa
-                
-                if ws.readyState == window.WebSocket.OPEN:
+                global morphhash, ws;  # noqa
+                if ws and ws.readyState == window.WebSocket.OPEN:
+                    morphhash = '_href_'
                     ws.close()
-                    
+                                    
             window.bind('beforeunload', _beforeunload)
 
         else:
