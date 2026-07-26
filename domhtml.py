@@ -474,6 +474,8 @@ class Cmp(Tag):
         
     def __delitem__(self, child_idx):       # list метод
         del self._childs[child_idx]
+    def remove(self, cmp):                  # list метод
+        self._childs.remove(cmp)
     def __len__(self):                      # list метод
         return len(self._childs)
     def __iter__(self):                     # list метод
