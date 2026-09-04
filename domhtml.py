@@ -332,6 +332,9 @@ class Cmp(Tag):
 
         XXX Ссылка на parent в childs утилитарная и слабая
 
+        
+        FIXME: bool(Cmp()) эквивалентно bool(len(Cmp())) - Это список (присутствует __len__).
+               Наличие компонента или его отсутствие корректно определять явно через `is None` / `is not None`
     """
 
     id_count = itertools.count()
@@ -380,7 +383,6 @@ class Cmp(Tag):
             c._parent = weakref.proxy(inst)
             
         return inst
-
 
 
     @staticmethod
@@ -470,7 +472,13 @@ class Cmp(Tag):
         
     def __setitem__(self, child_idx, cmp):  # list метод
         assert self.tag not in {Tag.NODE_TEXT};  # Эти не могут иметь дочерние
-        self._childs[child_idx] = (c := self._to_component(cmp)); c._parent = weakref.proxy(self)
+        if isinstance(child_idx, slice):
+            start, stop, step = child_idx.indices(len(self._childs))
+            # strict=True выбросит ValueError, если длины не совпадут
+            for idx, val in zip(range(start, stop, step), cmp, strict=True):
+                self._childs[idx] = (c := self._to_component(val)); c._parent = weakref.proxy(self)
+        else:
+            self._childs[child_idx] = (c := self._to_component(cmp)); c._parent = weakref.proxy(self)
         
     def __delitem__(self, child_idx):       # list метод
         del self._childs[child_idx]
@@ -599,10 +607,11 @@ class Cmp(Tag):
     def dirty(self, **props):
         """
             Маркировка компонента для гарантии обновления через морфинг dom и/или установки properties на стороне браузера (например value)
+            XXX Компоненты у которых нет id (установлены в None принудительно) - не обновляемые (заэкранированы от обновления)
         """
         self.upd_attrs(data_dirty = (self.get_attrs().get('data_dirty') or 0) + 1)
         if props:
-            self.upd_attrs(data_props = props)
+            self.upd_attrs(data_props = props)        
 
     async def update(self):
         dom = self._get_dom()

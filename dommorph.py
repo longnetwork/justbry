@@ -261,24 +261,24 @@ class DomMorph(DomHtml):
 
                 if not data: return
 
-                ids = [];       # Из-за возможной смены id требуется два прохода (со сменой id во втором отдельном проходе: el.id = str(id))
+                updids = [];       # Из-за возможной смены id требуется два прохода (со сменой id во втором отдельном проходе: el.id = str(id))
                 
                 for d in data:  # FIXME select через атрибут для браузера тяжелее чем выборка по уникальному id (document.getElementById(str(_id)))
                     match d:
                         case "outerHTML", _id, _, str(outerHTML) if _id is not None:  # outerHTML уже содержит новый id
                             idselector = f"[id='{_id}']"
-                            for el in document.select(idselector):
+                            for el in (els := document.select(idselector)):
                                 el.outerHTML = outerHTML
                                 
                         case "innerHTML", _id, id, str(innerHTML) if _id is not None:
                             idselector = f"[id='{_id}']"
-                            for el in document.select(idselector):
+                            for el in (els := document.select(idselector)):
                                 el.innerHTML = innerHTML
-                            if id is not None and id != _id: ids.append( (idselector, id) )
+                            if id is not None and id != _id: updids.append( (els, id) )
                                 
                         case "attrs", _id, id, dict(attrs) if _id is not None:
                             idselector = f"[id='{_id}']"
-                            for el in document.select(idselector):
+                            for el in (els := document.select(idselector)):
                                 attrs = { k.replace('_', '-'): v for k, v in attrs.items() }
                                 
                                 for k, v in list(el.attrs.items()):
@@ -310,29 +310,30 @@ class DomMorph(DomHtml):
                                     if k in {'value', }:
                                         setattr(el, k, v)
                                     
-                            if id is not None and id != _id: ids.append( (idselector, id) )
+                            if id is not None and id != _id: updids.append( (els, id) )
                                     
                         case "remove", _id, _, _ if _id is not None:
                             idselector = f"[id='{_id}']"
-                            for el in document.select(idselector):
+                            for el in (els := document.select(idselector)):
                                 el.remove()
                                 
                         case "afterbegin", _id, id, str(outerHTML) if _id is not None:
                             idselector = f"[id='{_id}']"
-                            for el in document.select(idselector):
+                            for el in (els := document.select(idselector)):
                                 el.insertAdjacentHTML('afterbegin', outerHTML)
-                            if id is not None and id != _id: ids.append( (idselector, id) )
+                            if id is not None and id != _id: updids.append( (els, id) )
                                     
                         case "beforeend", _id, id, str(outerHTML) if _id is not None:
                             idselector = f"[id='{_id}']"
-                            for el in document.select(idselector):
+                            for el in (els := document.select(idselector)):
                                 el.insertAdjacentHTML('beforeend', outerHTML)
-                            if id is not None and id != _id: ids.append( (idselector, id) )
+                            if id is not None and id != _id: updids.append( (els, id) )
 
-                for idselector, id in ids:
-                    for el in document.select(idselector):
+                # XXX Из-за возможной зависимости ids (например в списках элементов), должны работать по
+                # готовым ссылкам на элементы чьи ids обновляются
+                for els, id in updids:
+                    for el in els:
                         el.id = str(id)
-                
 
                 # FIXME Когда меняются аттрибуты и id браузер не хочет корректно пересчитать стили без "пинка"
                 node = document.createTextNode(""); document.body.appendChild(node); _ = document.body.offsetHeight; document.body.removeChild(node)

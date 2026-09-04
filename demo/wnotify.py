@@ -90,7 +90,7 @@ class WNotify(Cmp):
                              ),
                              name=f"wnotify{self.id}-container")
 
-        self.__rendered = False;  
+        self.__rendered = False;  # XXX Приватный атрибут который есть только в этом классе
                                   
     def render(self):
         """
