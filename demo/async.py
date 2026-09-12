@@ -20,7 +20,7 @@ def tasks():
             
             await aio.sleep(1 + random())
 
-            document.attach(html.B(f"{ident}: {cnt}")); document.attach(html.BR())
+            document <= html.B(f"{ident}: {cnt}"); document <= html.BR()
             print(f"{ident}: {cnt}")
 
     for i in range(3):

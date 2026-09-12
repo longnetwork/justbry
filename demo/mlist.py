@@ -9,10 +9,12 @@ from justbry import Justbry, Route
 from justbry.dommorph import DomMorph, Cmp
 
 
+LIST_SIZE = 32
+
 dom = DomMorph(
 
     uls := Cmp('div', classes="container")(
-        *( (ul := Cmp('ul'))(Cmp('b')(f"Lorem Ipsum {ul.id}")) for _ in range(8))
+        *( (ul := Cmp('ul'))(Cmp('b')(f"Lorem Ipsum {ul.id}")) for _ in range(LIST_SIZE))
     )
 )
 

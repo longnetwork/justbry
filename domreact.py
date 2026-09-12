@@ -17,16 +17,16 @@ class DomReact(DomMorph):
     """
 
     # glock = asyncio.Lock()
-                  
+
     reactendpoint = ReactEndpoint;  # Один маршрут с параметром на все dom
 
-    
+
     def __init__(self, /, *body_components, static="/", version=None, **kwargs):
         super().__init__(*body_components, static=static, version=version, **kwargs)
 
 
         baseroute = self.reactendpoint.reactroute.rsplit('/', 1)[0] or "/evt"
-        
+
         self.reactroute = baseroute + '/' + str(self.dom_id)
 
 
@@ -34,18 +34,18 @@ class DomReact(DomMorph):
             Cmp('script', type="text/python", id='react')(     # XXX id это имя модуля доступного через import и не может содержать '-'
                 type(self).react(EVENTROUTE=self.reactroute),  # Может быть перегружен в наследника как статический метод
             ),
-            
-            # eventers := Cmp('script', type="text/python", id='eventers')  # Контейнер для всех скриптов DomReact.eventer()           
+
+            # eventers := Cmp('script', type="text/python", id='eventers')  # Контейнер для всех скриптов DomReact.eventer()
         )
 
         self.html.add(
-            eventers := Cmp('script', type="text/python", id='eventers')  # Контейнер для всех скриптов DomReact.eventer()           
+            eventers := Cmp('script', type="text/python", id='eventers')  # Контейнер для всех скриптов DomReact.eventer()
         )
 
         self.eventers = eventers
         self.eventers_targets = set();   # Для отслеживания уже добавленных скриптов  type(self).eventer(cmp.id, evtype) в dom
         self.handlers = {};              # {currentTargetId: [ (evtype, handler), ... ]}
-        
+
         self.evque = deque(maxlen=256);  # FIXME Захардкодил
 
     async def response(self, request=None):
@@ -62,7 +62,8 @@ class DomReact(DomMorph):
         from javascript import JSON
         from browser import document, window, ajax, console, timer, DOMEvent, DOMNode;  # noqa
         from morpher import compress, toBase64
-        
+
+        Uint8Array = window.Uint8Array
 
         props_white_list = {  # FIXME Определиться с точным списком без не нужного
             'currentTarget',  # 'target',
@@ -95,11 +96,11 @@ class DomReact(DomMorph):
             # 'method',
             # 'encoding',
             # 'noValidate',
-            
+
             'multiple', 'selectedOptions',
 
             'getBoundingClientRect', 'top', 'left', 'width', 'height',
-            
+
             # 'validity', 'valid',
             'touches', 'changedTouches',
             # 'dataset',
@@ -107,7 +108,7 @@ class DomReact(DomMorph):
 
             'files', 'name', 'type', 'size', 'lastModified', 'arrayBuffer'
         }
-        
+
         def _props_to_dict(obj, promises):
             res = {}
             # if isinstance(obj, (DOMEvent, DOMNode)):
@@ -118,13 +119,13 @@ class DomReact(DomMorph):
 
                         if isinstance(v, (bool, int, float, str, bytes)):
                             res[k] = v
-                            
+
                             continue
-                            
+
                         if isinstance(v, (DOMEvent, DOMNode)):
                             v = _props_to_dict(v, promises)
                             if v: res[k] = v
-                            
+
                             continue
 
                         if callable(v):
@@ -141,7 +142,7 @@ class DomReact(DomMorph):
                                 pass
 
                             continue
-                            
+
                         # Если итерируемый объект
                         try:
                             v = list(v)
@@ -150,33 +151,34 @@ class DomReact(DomMorph):
                         except:
                             pass
 
-                    
+
             return res
 
 
         def event_to_dict(ev, promises):
             ct = ev.currentTarget
-        
+
             result = {}
-            
+
             result.update(_props_to_dict(ev, promises))
 
             result.setdefault('currentTarget', {}).update((a.name, a.value) for a in ct.attributes if a.name.startswith('data-'))
 
             return result
 
-        
-        def _ajax_event(data):
+
+        def _ajax_event(data: bytes):
             """
                 XXX Барузеры могут ставить ajax в очередь (например при перезапуске uvicorn с открытыми сессиями)
                     - используем алгоритм пропихивания события на сервер с прогрессирующим таймаутом
-                    - используем ev.preventDefault() для предотвращения NS_BINDONG_ABORTED 
+                    - используем ev.preventDefault() для предотвращения NS_BINDONG_ABORTED
             """
             # event_url = f"{window.location.protocol}//{window.location.hostname}:{window.location.port}{EVENTROUTE}"
             event_url = EVENTROUTE
 
             headers = {
-                'Content-Type': "text/plain;charset=UTF-8",
+                # 'Content-Type': "text/plain;charset=UTF-8",
+                'Content-Type': "application/octet-stream",
                 'Cache-Control': "private, no-cache, no-store, max-age=0, must-revalidate",
                 'Pragma': "no-cache",
                 'Expires': "0",
@@ -195,44 +197,50 @@ class DomReact(DomMorph):
                 finally:
                     req.abort()
 
-            # ~ if data != "_ping_":
+            # ~ if data != b"_ping_":
                 # ~ # FIXME uvicorn закрывает соединение по --timeout-keep-alive и иногда первый запрос становится в pending.
                 # ~ #       Для обхода - первым пихаем пинг, чтобы не ждать EVENT_START_TIMEOUT в этом случае
-                # ~ ajax.post( event_url, headers=headers, data="_ping_", timeout=EVENT_START_TIMEOUT )
+                # ~ ajax.post( event_url, headers=headers, data=b"_ping_", timeout=EVENT_START_TIMEOUT )
 
             ajax.post( event_url, headers=headers, data=data, timeout=EVENT_START_TIMEOUT,
                        oncomplete = lambda r, t=EVENT_START_TIMEOUT: _oncomplete(r, t) )
-            
+
         reactCount = 0;  # Для уникальности хеша события на стороне сервера (есть также timeStamp)
 
         def send_event(ev):
             global reactCount
-            
+
             # ev.preventDefault()
 
             # console.time("geteventprops")
 
             promises = []
-            
+
             reactCount += 1
-            
-            data = event_to_dict(ev, promises); data['reactCount'] = reactCount
+
+            payload = event_to_dict(ev, promises); payload['reactCount'] = reactCount
 
             now = window.Date.new()
 
-            data['timestamp'] = now.getTime() / 1000;         # sec
-            data['tzoffset'] = now.getTimezoneOffset() * 60;  # sec
-            data['language'] = window.navigator.language
-            
+            payload['timestamp'] = now.getTime() / 1000;         # sec
+            payload['tzoffset'] = now.getTimezoneOffset() * 60;  # sec
+            payload['language'] = window.navigator.language
+
             # console.timeEnd("geteventprops")
 
             console.debug(f"Send Event `{ev.type}` from id {ev.currentTarget.id} to: {EVENTROUTE}")
 
-            window.Promise.all(promises).then(lambda _: compress(JSON.stringify(data))).then( _ajax_event )
+            window.Promise.all(promises).then(
+                lambda _: compress(JSON.stringify(payload))
+            ).then(
+                lambda blob: blob.arrayBuffer()
+            ).then(
+                lambda data: bytes(Uint8Array.new(data))
+            ).then( _ajax_event )
 
         # На всякий случай начальный пинг для принятия текущих заголовков
-        _ajax_event(data="_ping_");  # Символа "_" нету в base64
-        
+        _ajax_event(data=b"_ping_");  # NOTE: Символа "_" нету в base64
+
 
     @staticmethod
     @DomMorph.brython
@@ -260,7 +268,7 @@ class DomReact(DomMorph):
                 type(self).eventer(cmp.id, evtype)
             )
             self.eventers_targets.add(eventer_target)
-        
+
         handlers.append( (evtype, handler) )
 
 

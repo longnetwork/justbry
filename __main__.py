@@ -34,7 +34,7 @@ if __name__ == '__main__':
 
 
 
-    BRYTHON_VERSION = getattr(u_config, 'BRYTHON_VERSION', getattr(jb_config, 'BRYTHON_VERSION', '3.11.3'))
+    BRYTHON_VERSION = getattr(u_config, 'BRYTHON_VERSION', getattr(jb_config, 'BRYTHON_VERSION', '3.14.3'))
     BRYTHON_LINKS = [
         f"https://cdnjs.cloudflare.com/ajax/libs/brython/{BRYTHON_VERSION}/brython.min.js",
         f"https://cdnjs.cloudflare.com/ajax/libs/brython/{BRYTHON_VERSION}/brython_stdlib.min.js",

@@ -6,7 +6,7 @@
 # pylint: disable=W0621,W0123,W0622
 
 
-import asyncio, base64, gzip, json
+import asyncio, gzip, json
 
 from time import time
 
@@ -26,7 +26,7 @@ class DomMorph(DomHtml):
     """
 
     # glock = asyncio.Lock()
-                  
+
     morphendpoint = MorphEndpoint;  # Один маршрут сокета с параметром на все dom
 
 
@@ -43,14 +43,14 @@ class DomMorph(DomHtml):
         self.dom_id = str(id(self))
 
         baseroute = self.morphendpoint.morphroute.rsplit('/', 1)[0] or "/dom"
-        
+
         self.morphroute = baseroute + '/' + str(self.dom_id)
 
         self.head.add(
             morphhash := Cmp('meta', name="morphhash", content=""),
-            
+
             Cmp('script', type="text/python", id='morpher')(    # XXX id это имя модуля доступного через import и не может содержать '-'
-            
+
                 # type(self).gzip,                              # Утилиты компрессии доступны через import morpher
                 # DomHtml.brython(type(self).gzip)(),           # Эквивалент
                 type(self).gzip(),                              # Эквивалент если DomMorph.gzip отдекорирована через @DomHtml.brython
@@ -60,16 +60,16 @@ class DomMorph(DomHtml):
 
         self.morphhash = morphhash;  # self.morphhash.attrs.content = str(hash(self.body)) при response
 
-        # Чтобы не апдэйтить все body а лишь изменяющуюся часть через web-socket 
+        # Чтобы не апдэйтить все body а лишь изменяющуюся часть через web-socket
         # нам нужно отдельно хранить копии того что отдано в бразуер
 
         self.morphsockets = {};  # {websocket: (deepcopy(self.body), morphhash, bodyhash)}
         self.responses = {};     # {morphhash: (deepcopy(self.body), HTMLResponse(self.render()), bodyhash)}
         self._responses = {};    # {morphhash: time()}
-        
+
 
         # XXX Starlette не async обработчики запускает в threadpool автоматом (оборачивает в awaitable объект)
-        
+
         self.alock = asyncio.Lock()
 
 
@@ -96,10 +96,10 @@ class DomMorph(DomHtml):
 
         if cmp.tag in {Cmp.NODE_TEXT} or _cmp.tag in {Cmp.NODE_TEXT}:
             # У этих тегов нет дочерних и атрибутов. literal у них это не атрибуты а содержимое
-            
+
             # Текстовая нода и их может быть много в родителе и они не имеют id, - поэтому
             # обновляем через innerHTML родителя. Для оптимизации (индивидуального обновления)
-            # можно и НУЖНО оборачивать такие ноды в "нейтральные" теги (например <span>)            
+            # можно и НУЖНО оборачивать такие ноды в "нейтральные" теги (например <span>)
             if cmp != _cmp:
                 _cmp_parent_id = None
                 try: _cmp_parent_id = getattr(_cmp._parent, 'id', None)
@@ -114,10 +114,10 @@ class DomMorph(DomHtml):
                 yield 'innerHTML', _cmp_parent_id, cmp_parent_id, cmp_parent_inner
 
             return
-        
+
         if cmp.tag != _cmp.tag:  # Это замена всего outerHTML данного тега (тег другой)
             yield 'outerHTML', _cmp.id, cmp.id, cmp.outer();  # ..., str
-                
+
         else:
             # Тег не поменялся
             if cmp.literal != _cmp.literal or cmp.id != _cmp.id:
@@ -127,10 +127,10 @@ class DomMorph(DomHtml):
             if len(cmp._childs) == len(_cmp._childs):
                 # Дочерние структуры у тегов одинаковы и мы углубляемся по дереву childs чтобы найти точку начала различий
                 for child, _child in zip(cmp._childs, _cmp._childs):
-                    yield from DomMorph.compare_dom(child, _child);  
+                    yield from DomMorph.compare_dom(child, _child);
             else:
                 # yield 'innerHTML', _cmp.id, cmp.id, cmp.inner();  # Этого достаточно если без оптимизации
-                
+
                 # Оптимизация обновления длинных списков возможна в парадигме:
                 # - Добавление в начало;
                 # - добавление в конец;
@@ -145,10 +145,10 @@ class DomMorph(DomHtml):
                         removed = _cmp._childs[: pos] + _cmp._childs[pos + len(cmp._childs):]
                         for c in removed:                                    # Удаление лишнего
                             yield 'remove', c.id, None, None
-                    
+
                 else:
                     # Расширяем дочерние компоненты сохраняя порядок следования
-                    
+
                     pos = find_slice(cmp._childs, _cmp._childs)
                     if pos < 0:
                         yield 'innerHTML', _cmp.id, cmp.id, cmp.inner();     # Не получается
@@ -167,52 +167,39 @@ class DomMorph(DomHtml):
         """
             Стандартные модули brython zlib/gzip работают очень медленно, поэтому используем нативное api браузера
             ( базовые примеры: https://gist.github.com/Explosion-Scratch/357c2eebd8254f8ea5548b0e6ac7a61b )
-
-            TODO: Когда появится фикс позволяющий отправлять bytes через browser.ajax, тогда слой
-                  кодирования base64 можно будет исключить
-                  Уже появился!
         """
         # pylint: disable=E0401,W0612
 
         from browser import window
-        
-        (String, TextEncoder, TextDecoder, 
+
+        (String, TextEncoder, TextDecoder,
          CompressionStream, DecompressionStream,
          Response, Uint8Array,
-         btoa, atob,  # noqa
-         js_eval) = (window.String, window.TextEncoder, window.TextDecoder, 
+         btoa, atob,
+         js_eval) = (window.String, window.TextEncoder, window.TextDecoder,
                      window.CompressionStream, window.DecompressionStream,
                      window.Response, window.Uint8Array,
                      window.btoa, window.atob,
                      window.eval)
 
-        def toBase64(data):
+        def toBase64(data: "arrayBuffer"):  # NOTE: base64 увеличивает размер данных примерно на 33%
             # apply разворачивает в кучу параметров и есть ограничение на их число (32768 == 0x8000), поэтому заменяем на чанки
             u = Uint8Array.new(data)
             return btoa(''.join([String.fromCharCode.apply(None, u.subarray(i, i + 0x8000)) for i in range(0, u.length, 0x8000)]))
 
-        def compress(s: 'str string') -> "Promise of base64 string":    # Сжимает примерно в два раза
-            byteArray = TextEncoder.new().encode(s);  # utf-8
+        def compress(s: 'str') -> "Promise of blob":
             cs = CompressionStream.new('gzip')
-            writer = cs.writable.getWriter(); writer.write(byteArray); writer.close();
-            reader = Response.new(cs.readable).arrayBuffer();  # Promise (awaitable)
+            compressed_stream = Response.new(s).body.pipeThrough(cs)
+            response = Response.new(compressed_stream)
+            return response.blob()
 
-            # ~ return reader.then( lambda data:  # Промис с навешанной лямбдой
-                                # ~ btoa(String.fromCharCode.apply(None, Uint8Array.new(data))) )
-                                
-            return reader.then(toBase64)
-                                
-
-        def decompress(b: 'base64 string') -> "Promise of str string":  # base64 увеличивает размер данных примерно на 33%
-            # byteArray = Uint8Array.new([ord(c) for c in atob(b)]);  # ord ~ charCodeAt(0)
-            byteArray = js_eval(f"Uint8Array.from(atob('{b}'), char => char.charCodeAt(0));");  # speed-up x6
-            cs = DecompressionStream.new('gzip')
-            writer = cs.writable.getWriter(); writer.write(byteArray); writer.close();
-            reader = Response.new(cs.readable).arrayBuffer()
-
-            return reader.then( lambda data:  # Промис с навешанной лямбдой
-                                TextDecoder.new().decode(data) )
-                                
+        def decompress(b: 'js blob') -> "Promise of str":
+            ds = DecompressionStream.new('gzip')
+            decompressed_stream = b.stream().pipeThrough(ds)
+            response = Response.new(decompressed_stream)
+            return response.text();  # всегда utf-8
+            
+            
 
 
     @staticmethod
@@ -235,7 +222,7 @@ class DomMorph(DomHtml):
 
             Соглашение по данным в сокетах:
                 - преобразуемые в объекты через ast.literal_eval(repr(...)) (или json) строки
-            
+
         """
         # pylint: disable=E0401,W0601,W0602
 
@@ -245,9 +232,9 @@ class DomMorph(DomHtml):
         from morpher import decompress
 
         if websocket.supported:  # WebSocket supported
-            
+
             ws = None; morphhash = '';  # morphhash во фронт-энде в globals
-            wsconnect_timer = None;             # Reconnect Time
+            wsconnect_timer = None;     # Reconnect Time
 
 
             def morphing(data):    # Морфинг DOM
@@ -262,35 +249,35 @@ class DomMorph(DomHtml):
                 if not data: return
 
                 updids = [];       # Из-за возможной смены id требуется два прохода (со сменой id во втором отдельном проходе: el.id = str(id))
-                
+
                 for d in data:  # FIXME select через атрибут для браузера тяжелее чем выборка по уникальному id (document.getElementById(str(_id)))
                     match d:
                         case "outerHTML", _id, _, str(outerHTML) if _id is not None:  # outerHTML уже содержит новый id
                             idselector = f"[id='{_id}']"
                             for el in (els := document.select(idselector)):
                                 el.outerHTML = outerHTML
-                                
+
                         case "innerHTML", _id, id, str(innerHTML) if _id is not None:
                             idselector = f"[id='{_id}']"
                             for el in (els := document.select(idselector)):
                                 el.innerHTML = innerHTML
                             if id is not None and id != _id: updids.append( (els, id) )
-                                
+
                         case "attrs", _id, id, dict(attrs) if _id is not None:
                             idselector = f"[id='{_id}']"
                             for el in (els := document.select(idselector)):
                                 attrs = { k.replace('_', '-'): v for k, v in attrs.items() }
-                                
+
                                 for k, v in list(el.attrs.items()):
                                     if k == 'id': continue
                                     if k not in attrs:
                                         del el.attrs[k]
-                                        
+
                                 for k, v in attrs.items():
                                     if k in {'classes', 'class', 'className'}:
                                         el.attrs['class'] = v
                                         continue
-                                        
+
                                     if k == 'data-props':
                                         for k, v in v.items():
                                             setattr(el, k, v)
@@ -303,26 +290,26 @@ class DomMorph(DomHtml):
                                         else:
                                             try: del el.attrs[k]
                                             except: pass
-                                        continue                                        
-                                        
+                                        continue
+
                                     el.attrs[k] = v
                                     # if k in {'value', 'href', 'src', 'action', }:  # FIXME полный список
                                     if k in {'value', }:
                                         setattr(el, k, v)
-                                    
+
                             if id is not None and id != _id: updids.append( (els, id) )
-                                    
+
                         case "remove", _id, _, _ if _id is not None:
                             idselector = f"[id='{_id}']"
                             for el in (els := document.select(idselector)):
                                 el.remove()
-                                
+
                         case "afterbegin", _id, id, str(outerHTML) if _id is not None:
                             idselector = f"[id='{_id}']"
                             for el in (els := document.select(idselector)):
                                 el.insertAdjacentHTML('afterbegin', outerHTML)
                             if id is not None and id != _id: updids.append( (els, id) )
-                                    
+
                         case "beforeend", _id, id, str(outerHTML) if _id is not None:
                             idselector = f"[id='{_id}']"
                             for el in (els := document.select(idselector)):
@@ -366,7 +353,7 @@ class DomMorph(DomHtml):
                 global morphhash, wsconnect_timer;  # noqa
 
                 if wsconnect_timer: timer.clear_timeout(wsconnect_timer); wsconnect_timer = None
-                
+
                 console.warn(f"Morpher Close: {morphhash=}")
 
                 if not morphhash.startswith('_href_'):
@@ -374,21 +361,25 @@ class DomMorph(DomHtml):
 
             def _message(ev):
                 global morphhash
-                
-                console.debug(f"Dom Morphing size: {len(ev.data)} bytes")
-                try:                    
-                    if ev.data == '_pong_':                # XXX Сервер сам пингует сокеты без нашего участия
-                        return
 
-                    if ev.data.startswith('_href_'):
-                        href = ev.data[6:]
-                        
-                        morphhash = '_href_'               # Будет закрытие сокета без  location.replace()
-                        window.location.assign(href)
-                        return
+                try:
+                    if isinstance(ev.data, str):
+                        if ev.data == '_pong_':                # XXX Сервер сам пингует сокеты без нашего участия
+                            return
+
+                        if ev.data.startswith('_href_'):
+                            href = ev.data[6:]
+
+                            morphhash = '_href_'               # Будет закрытие сокета без  location.replace()
+                            window.location.assign(href)
+                            return
+                            
+                        return 
                     
+                    console.debug(f"Dom Morphing size: {ev.data.size} bytes")
+
                     decompress(ev.data).then(morphing)
-                        
+
 
                 except Exception as e:
                     console.error("Dom Morphing:", e)
@@ -397,7 +388,7 @@ class DomMorph(DomHtml):
             def start_wsconnect_cycle():
                 """ Инициализация websocket и попытки подключения """
                 global ws, wsconnect_timer
-                
+
                 # Очищаем старый таймер, чтобы они не накладывались друг на друга
                 if wsconnect_timer: timer.clear_timeout(wsconnect_timer); wsconnect_timer = None
 
@@ -432,7 +423,7 @@ class DomMorph(DomHtml):
                 if ws and ws.readyState == window.WebSocket.OPEN:
                     morphhash = '_href_'
                     ws.close()
-                                    
+
             window.bind('beforeunload', _beforeunload)
 
         else:
@@ -449,16 +440,16 @@ class DomMorph(DomHtml):
             self.morphsockets = {};  # {websocket: (deepcopy(self.body), morphhash, bodyhash)}
             self.responses = {};     # {morphhash: (deepcopy(self.body), HTMLResponse(self.render()), bodyhash)}
             self._responses = {};    # {morphhash: time()}
-                  
+
         """
         self.morphendpoint.doms[self.dom_id] = self
-        
+
         async with self.alock:
 
             # Обязаны проверить зомби-morphhash созданные ботами без скриптов (без открытия сокетов)
             # Все для которых долго не открыты сокеты - зомби
             ctime = time() - 60;  # FIXME Захардкодил
-            
+
             workers = set(m for _, m, _ in self.morphsockets.values());  # Все для которых открыты сокеты
             zombies = set(m for m, t in self._responses.items() if t < ctime)
             zombies -= workers
@@ -473,15 +464,15 @@ class DomMorph(DomHtml):
 
             if morphhash not in self.responses:
                 self.morphhash.attrs.content = str(morphhash)
-                
+
                 render = self.render(); bodyhash = hash(self.body);  # self.render() может динамически изменить self.body
 
                 # Фактическое body после первого рендера
                 self.responses[morphhash] = ( deepcopy(self.body), render, bodyhash ); self._responses[morphhash] = time()
-                
+
             else:
                 render = self.responses[morphhash][1];  # XXX Кешированный рендер
-            
+
             return HTMLResponse(render, headers=self.headers)
 
     async def update(self):
@@ -490,26 +481,26 @@ class DomMorph(DomHtml):
                   обновлении из фоновых процессов, которые вынуждены предполагают что прошлый update() еще до
                   открытия сокета браузером не прошел и нужен повторный update()
 
-                  update() из обработчиков eventers вызывается когда действительно есть обновления dom и deepcopy 
+                  update() из обработчиков eventers вызывается когда действительно есть обновления dom и deepcopy
                   под блокировкой оправдано с точки зрения оптимизации.
 
                   FIXME По тестам рекусивный hash всего лишь в 2 раза быстрее deepcopy
         """
         async with self.alock:
-            
+
             if not self.morphsockets: return False
-            
+
             bodyhash = hash(self.body); bodycopy = None
-            
+
             # Далее работаем со снимком body в данный момент (ниже есть переключение await и self.body может меняться во вне)
 
             updates = []
-            
+
             for socket, (_body, morphhash, _bodyhash) in list(self.morphsockets.items()):
                 if bodyhash != _bodyhash:   # Есть изменения dom
-                    
+
                     bodycopy = bodycopy or deepcopy(self.body);  # Однократная deepcopy
-                    
+
                     diffs = list(self.compare_dom(bodycopy, _body))
                     if diffs:
                         # Просев дубликатов
@@ -517,9 +508,9 @@ class DomMorph(DomHtml):
                         for d in diffs:
                             if d not in udiffs:
                                 udiffs.append(d)
-                        
-                        updates.append(socket.send_text( base64.b64encode(gzip.compress(json.dumps(udiffs).encode())).decode() ))
-                        
+
+                        updates.append(socket.send_bytes( gzip.compress(json.dumps(udiffs).encode()) ))
+
                     # morphhash менять нельзя, чтобы работала очистка self.responses при закрытии сокета
                     # То есть morphhash - это первый хешь при первой отдачи response на сторону браузера
                     self.morphsockets[socket] = (bodycopy, morphhash, bodyhash)
@@ -543,11 +534,11 @@ class DomMorph(DomHtml):
                 results = await asyncio.gather(*updates, return_exceptions=True)
                 for e in results:
                     if isinstance(e, Exception):
-                        if (log := getLogger()): log.exception(e)                
+                        if (log := getLogger()): log.exception(e)
 
             return bool(updates)
 
 
 
 
-            
+

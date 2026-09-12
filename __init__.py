@@ -3,7 +3,7 @@
     Модуль justbry как надстройка над starlette и точка импорта системных классов
 """
 
-import re, weakref, gzip, base64, inspect, logging
+import re, weakref, gzip, inspect, logging
 # from ast import literal_eval
 import json
 
@@ -131,14 +131,18 @@ class MorphEndpoint(WebSocketEndpoint):
             await websocket.close(1008, "unknown dom_id")
                 
     async def on_receive(self, websocket, data):
+        if not isinstance(data, (str, bytes)):
+            await websocket.close(1003, "unsupported data")
+            return
+
         if data == '_ping_':
             await websocket.send_text('_pong_');                      # Это преимущественно исходящий сокет
             return
-
-        if not isinstance(data, str):
-            await websocket.close(1003, "unsupported data")
-            return
             
+        if data == b'_ping_':
+            await websocket.send_bytes(b'_pong_');                    # Это преимущественно исходящий сокет
+            return            
+
         if data.isdigit():                                            # morphhash
             dom =  self.doms.get(str(websocket.path_params.get('dom_id')))
             if not dom:
@@ -151,8 +155,6 @@ class MorphEndpoint(WebSocketEndpoint):
                     body, _, bodyhash = dom.responses[morphhash]
                     # Теперь dom может сам себя обновлять на стороне браузера
                     dom.morphsockets[websocket] = (body, morphhash, bodyhash)
-                    
-                    # await websocket.send_text(data);                # _pong_
                     return
 
         await websocket.close(1008, "unknown morphhash")
@@ -192,7 +194,8 @@ class ReactEndpoint(HTTPEndpoint):
     doms = weakref.WeakValueDictionary();  # {str(id(dom)): dom, ...} Будет удерживаться пока есть в MorphEndpoint.doms
 
     headers = {
-        'Content-Type': "text/plain;charset=UTF-8",
+        # 'Content-Type': "text/plain;charset=UTF-8",
+        'Content-Type': "application/octet-stream",
         'Cache-Control': "private, no-cache, no-store, max-age=0, must-revalidate",
         'Pragma': "no-cache",
         'Expires': "0",
@@ -208,7 +211,7 @@ class ReactEndpoint(HTTPEndpoint):
             
         try:
 
-            request_body = await request.body();  # Строка base64 сжатых байт
+            request_body = await request.body();  # blob сжатых байт
 
             if request_body == b'_ping_':
                 return Response(b'_pong_', status_code=202, headers=self.headers)
@@ -221,7 +224,7 @@ class ReactEndpoint(HTTPEndpoint):
             dom.evque.append(hash_body)
 
 
-            data = gzip.decompress( base64.b64decode(request_body) )
+            data = gzip.decompress( request_body )
 
             if (log := getLogger()): log.debug(f"event: {len(data)=} ({data[:512]}...)")
             

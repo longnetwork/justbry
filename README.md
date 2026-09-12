@@ -5,12 +5,15 @@ Python scripts into the frontend for Ajax, React, or anything else.
 `pip install --force-reinstall git+https://github.com/longnetwork/justbry.git`  
 
 
-`python -m uvicorn justbry.demo.bulma:app`  
-`python -m uvicorn justbry.demo.dom:app`  
-`python -m uvicorn justbry.demo.async:app`  
-`python -m uvicorn justbry.demo.morph:app`  
-`python -m uvicorn justbry.demo.mlist:app`  
-`python -m uvicorn justbry.demo.react:app`  
-`python -m uvicorn justbry.demo.widget:app`  
-`python -m uvicorn justbry.demo.corsess:app`  
-`python -m uvicorn justbry.demo.wnotify:app`  
+```
+python -m uvicorn --log-level debug justbry.demo.bulma:app
+python -m uvicorn --log-level debug justbry.demo.dom:app
+python -m uvicorn --log-level debug justbry.demo.async:app
+python -m uvicorn --log-level debug justbry.demo.morph:app
+python -m uvicorn --log-level debug justbry.demo.mlist:app
+python -m uvicorn --log-level debug justbry.demo.react:app
+python -m uvicorn --log-level debug justbry.demo.widget:app
+python -m uvicorn --log-level debug justbry.demo.corsess:app
+python -m uvicorn --log-level debug justbry.demo.wnotify:app
+
+```
