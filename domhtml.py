@@ -675,15 +675,8 @@ class DomHtml(Cmp):
 
                 Cmp('meta', name="version", content=f"{version}" if version else ""),
 
-                Cmp('script', src = static + "brython.min.js" + (f"?v={version}" if version else ""), defer=deferbry),
-                libbry := Cmp('script', src = static + "brython_stdlib.min.js" + (f"?v={version}" if version else ""), defer=deferbry),
-                # libbry := Cmp('script', src = static + "brython_modules.js" + (f"?v={version}" if version else ""), defer=deferbry),
 
                 Cmp('link', rel="stylesheet", href = static + "bulma.min.css" + (f"?v={version}" if version else "")),
-                
-                Cmp('script', src = static + "fontawesome_all.js" + (f"?v={version}" if version else ""), defer=True),
-
-                
                 style := Cmp('style', id='style')("""
                     [data-theme=light],
                     .theme-light {
@@ -694,7 +687,12 @@ class DomHtml(Cmp):
                         background-color: var(--bulma-dark);
                     }
                 """),
+                Cmp('script', src = static + "fontawesome_all.js" + (f"?v={version}" if version else ""), defer=True),
 
+
+                Cmp('script', src = static + "brython.min.js" + (f"?v={version}" if version else ""), defer=deferbry),
+                libbry := Cmp('script', src = static + "brython_stdlib.min.js" + (f"?v={version}" if version else ""), defer=deferbry),
+                # libbry := Cmp('script', src = static + "brython_modules.js" + (f"?v={version}" if version else ""), defer=deferbry),                
                 Cmp('script', type="text/javascript", id="brython")(
                     (f"window.onload = () => "
                      f"brython({{ "
