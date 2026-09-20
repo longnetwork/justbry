@@ -676,7 +676,7 @@ class DomHtml(Cmp):
                 Cmp('meta', name="version", content=f"{version}" if version else ""),
 
 
-                Cmp('link', rel="stylesheet", href = static + "bulma.min.css" + (f"?v={version}" if version else "")),
+                css := Cmp('link', rel="stylesheet", href = static + "bulma.min.css" + (f"?v={version}" if version else "")),
                 style := Cmp('style', id='style')("""
                     [data-theme=light],
                     .theme-light {
@@ -687,7 +687,7 @@ class DomHtml(Cmp):
                         background-color: var(--bulma-dark);
                     }
                 """),
-                Cmp('script', src = static + "fontawesome_all.js" + (f"?v={version}" if version else ""), defer=True),
+                icons := Cmp('script', src = static + "fontawesome_all.js" + (f"?v={version}" if version else ""), defer=True),
 
 
                 Cmp('script', src = static + "brython.min.js" + (f"?v={version}" if version else ""), defer=deferbry),
@@ -715,7 +715,12 @@ class DomHtml(Cmp):
         self.head = head
         self.title = title
         self.icon = icon
+
+        self.css = css
         self.style = style
+        self.icons = icons
+
+
         self.body = body
 
         if body_components:            

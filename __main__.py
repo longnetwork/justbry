@@ -52,6 +52,21 @@ if __name__ == '__main__':
         f"https://use.fontawesome.com/releases/v{FONTAWESOME_VERSION}/js/all.js"
     ]
 
+
+    PICOCSS_VERSION = getattr(u_config, 'PICOCSS_VERSION', getattr(jb_config, 'PICOCSS_VERSION', '2.1.1'))
+    PICOCSS_LINKS = [
+        f"https://cdn.jsdelivr.net/npm/@picocss/pico@{PICOCSS_VERSION}/css/pico.min.css"
+    ]
+
+
+    REMIXICON_VERSION = getattr(u_config, 'REMIXICON_VERSION', getattr(jb_config, 'REMIXICON_VERSION', '4.9.1'))
+    REMIXICON_LINKS = [
+        f"https://cdn.jsdelivr.net/npm/remixicon@{REMIXICON_VERSION}/fonts/remixicon.min.css",
+        f"https://cdn.jsdelivr.net/npm/remixicon@{REMIXICON_VERSION}/fonts/remixicon.woff2",
+        f"https://cdn.jsdelivr.net/npm/remixicon@{REMIXICON_VERSION}/fonts/remixicon.woff",
+    ]
+
+
     import argparse
     
     parser = argparse.ArgumentParser(description="JustBry Tools", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -61,11 +76,21 @@ if __name__ == '__main__':
         _brython = subparsers.add_parser('brython', description="Download Brython Engine")
         _brython.add_argument('links', type=str, nargs='*', default=BRYTHON_LINKS, help="Bruthon Links (space-separated)")
 
+
         _bulma = subparsers.add_parser('bulma', description="Download Bulma CSS")
         _bulma.add_argument('links', type=str, nargs='*', default=BULMA_LINKS, help="Bulma Links (space-separated)")
 
         _fas = subparsers.add_parser('fas', description="Download FontAwesome CSS")
         _fas.add_argument('links', type=str, nargs='*', default=FONTAWESOME_LINKS, help="FontAwesome Links (space-separated)")
+
+
+        _picocss = subparsers.add_parser('picocss', description="Download Pico CSS")
+        _picocss.add_argument('links', type=str, nargs='*', default=PICOCSS_LINKS, help="Pico Links (space-separated)")
+
+        _remixicon = subparsers.add_parser('ri', description="Download RemixIcon Pack")
+        _remixicon.add_argument('links', type=str, nargs='*', default=REMIXICON_LINKS, help="RemixIcon Pack Links (space-separated)")
+
+        
 
         _optimize = subparsers.add_parser('optimize',
                                           description="Generate brython_modules.js to Replace brython_stdlib.js",
@@ -100,6 +125,24 @@ if __name__ == '__main__':
         for link in FONTAWESOME_LINKS:
             with requests.get(link, timeout=(6, 60)) as rx, open(os.path.join(STATIC_PATH, "fontawesome_" + os.path.basename(link)), 'wb') as f:
                 f.write(rx.content)        
+
+    if args.command == 'picocss':
+        PICOCSS_LINKS = args.links or PICOCSS_LINKS
+        print(f"{PICOCSS_LINKS=}")
+        
+        for link in PICOCSS_LINKS:
+            with requests.get(link, timeout=(6, 60)) as rx, open(os.path.join(STATIC_PATH, os.path.basename(link)), 'wb') as f:
+                f.write(rx.content)
+
+    if args.command == 'ri':
+        REMIXICON_LINKS = args.links or REMIXICON_LINKS
+        print(f"{REMIXICON_LINKS=}")
+        
+        for link in REMIXICON_LINKS:
+            with requests.get(link, timeout=(6, 60)) as rx, open(os.path.join(STATIC_PATH, os.path.basename(link)), 'wb') as f:
+                f.write(rx.content)       
+
+
 
     if args.command == 'optimize':
         try:
