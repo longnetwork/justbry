@@ -9,7 +9,7 @@ from justbry import Justbry, Route
 from justbry.dommorph import DomMorph, Cmp
 
 
-LIST_SIZE = 32
+LIST_SIZE = 128
 
 dom = DomMorph(
 

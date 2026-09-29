@@ -24,7 +24,7 @@ _(.venv)$_  `pip install websockets`
 _(.venv)$_  `pip install itsdangerous`  
 _(.venv)$_  `pip install requests`  
 
-<!-- _(.venv)$_  `pip install brython=="3.11.3"`  # для оптимизации и замены `brython_stdlib.js` на `brython_modules.js`  -->  
+<!-- _(.venv)$_  `pip install brython=="3.14.3"`  # для оптимизации и замены `brython_stdlib.js` на `brython_modules.js`  -->  
 
 
 

@@ -8,6 +8,7 @@ import interpreter
 import javascript
 
 from browser import (
+    DOMEvent, DOMNode,
     console, document, window, websocket, html,
     local_storage, session_storage,
     ajax, timer, aio,
