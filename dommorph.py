@@ -228,7 +228,7 @@ class DomMorph(DomHtml):
 
         # from ast import literal_eval
         from javascript import JSON
-        from browser import console, document, window, websocket, timer, aio
+        from browser import console, document, window, websocket, timer
         from morpher import decompress
 
         if websocket.supported:  # WebSocket supported
@@ -237,7 +237,7 @@ class DomMorph(DomHtml):
             wsconnect_timer = None;     # Reconnect Time
 
 
-            async def morphing(data):    # Морфинг DOM
+            def morphing(data):    # Морфинг DOM
                 console.time("Dom Morphing time:")
 
                 global morphhash;  # noqa
@@ -250,12 +250,7 @@ class DomMorph(DomHtml):
 
                 updids = [];       # Из-за возможной смены id требуется два прохода (со сменой id во втором отдельном проходе: el.id = str(id))
 
-                counter = 0
-
                 for d in data:
-                    counter += 1
-                    if counter % 32 == 0: await aio.sleep(0);  # Послабление для мобильных браузеров
-                        
                     match d:
                         case "outerHTML", _id, _, str(outerHTML) if _id is not None:  # outerHTML уже содержит новый id
                             el = document.getElementById(str(_id))
@@ -321,11 +316,16 @@ class DomMorph(DomHtml):
 
                 # XXX Из-за возможной зависимости ids (например в списках элементов), должны работать по
                 # готовым ссылкам на элементы чьи ids обновляются
+                notfounds = set()
                 for el, id in updids:
-                    el.id = str(id)
+                    if el:
+                        el.id = str(id)
+                    else:
+                        notfounds.add(str(id))
+                if notfounds:
+                    console.warn(f"Dom Morphing not Found ids: {notfounds}")
 
                 # FIXME Когда меняются аттрибуты и id браузер не хочет корректно пересчитать стили без "пинка"
-                await aio.sleep(0)
                 node = document.createTextNode(""); document.body.appendChild(node); _ = document.body.offsetHeight; document.body.removeChild(node)
 
                 console.timeEnd("Dom Morphing time:")
@@ -381,13 +381,7 @@ class DomMorph(DomHtml):
                     
                     console.debug(f"Dom Morphing size: {ev.data.size} bytes")
 
-
-                    # Дальше асинхронная работа (критически важно для мобильный браузеров)
-                    async def _apply_morphing():
-                        await morphing(await decompress(ev.data))
-                        
-                    aio.run(_apply_morphing())
-
+                    decompress(ev.data).then(morphing)
 
                 except Exception as e:
                     console.error("Dom Morphing:", e)
