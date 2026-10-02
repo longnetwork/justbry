@@ -699,11 +699,13 @@ class DomHtml(Cmp):
                      f"debug: 0, "
                      f"cache: {'true' if version else 'false'}, "
                      f"pythonpath: ['{(static + 'py_v=' + version) if version else (static + 'py')}'], "
-                     f"}})"),  # Требуется отсечение '_v=version' со стороны starlette.staticfiles ( justbry.VersionMiddleware )
+                     f"}});"),  # Требуется отсечение '_v=version' со стороны starlette.staticfiles ( justbry.VersionMiddleware )
 
                     ("""
-                    backlight = () => {document.documentElement.setAttribute('data-theme', window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');}
-                    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', backlight); backlight();
+                    document.addEventListener('DOMContentLoaded', () => {
+                        function backlight(){document.documentElement.setAttribute('data-theme', window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');}
+                        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', backlight); backlight();
+                    });
                     """),
                 )
             ),
