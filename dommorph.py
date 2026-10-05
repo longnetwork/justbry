@@ -355,7 +355,8 @@ class DomMorph(DomHtml):
                             console.info(f"Morpher wokeup: {morphhash=}")
                     return
 
-                # Если это ПОВТОРНОЕ успешное открытие после сбоя (когда morphhash уже был заполнен ранее), - принудительно обновляем страницу
+                # Если это ПОВТОРНОЕ успешное открытие после сбоя (перегрузки сервера или дропа WiFi), когда morphhash
+                # уже был заполнен ранее, - принудительно обновляем страницу (чтобы morphhash стал действительным)
                 console.warn(f"Morpher Restore: {morphhash=}, Reload...")
                 morphhash = '';  # Раз у нас идет reload, то morphhash назначится после успешного редиректа новый
                 # timer.set_timeout(window.location.replace, int(RELOAD_TIMEOUT * 1000 / 3), window.location.href)
@@ -371,6 +372,7 @@ class DomMorph(DomHtml):
                 console.warn(f"Morpher Close: {morphhash=}")
 
                 if not morphhash.startswith('_href_'):
+                    # Это при miessage c _href_ для window.location.assign) и start_wsconnect_cycle() уже не нужен
                     wsconnect_timer = timer.set_timeout(start_wsconnect_cycle, int(RELOAD_TIMEOUT * 1000))
 
             def _message(ev):
@@ -426,19 +428,8 @@ class DomMorph(DomHtml):
             try: window.bind('online', lambda ev: start_wsconnect_cycle())
             except: pass
 
-            # Это необходимо что бы закрытие сокета шло до того как пойдет новый запрос при обновлении страницы
-            # (Chromium подглючивает на этом месте: https://issues.chromium.org/issues/40839988)
-            def _beforeunload(_ev):
-                global morphhash, ws;  # noqa
-                if ws and ws.readyState == window.WebSocket.OPEN:
-                    morphhash = '_href_'
-                    ws.close()
-
-            window.bind('beforeunload', _beforeunload)
-
             # Мобильные браузере рвут соединение сокета в фоне если вкладка свернута и нужно корректно восстановить
             # связь без принудительного window.location.replace(window.location.href) в _open()
-
             def _visibilitychange(_ev):
                 global morphhash, ws;  # noqa
 
@@ -449,9 +440,19 @@ class DomMorph(DomHtml):
                     if not ws or ws.readyState != window.WebSocket.OPEN:
                         morphhash = '_wokeup_'
                         start_wsconnect_cycle()
-                    
                 
             try: document.bind('visibilitychange', _visibilitychange)
+            except: pass
+
+            # Это необходимо что бы закрытие сокета шло до того как пойдет новый запрос при обновлении страницы
+            # (Chromium подглючивает на этом месте: https://issues.chromium.org/issues/40839988)
+            def _beforeunload(_ev):
+                global morphhash, ws;  # noqa
+                if ws and ws.readyState == window.WebSocket.OPEN:
+                    morphhash = '_href_'
+                    ws.close()
+
+            try: window.bind('beforeunload', _beforeunload)
             except: pass
             
 
