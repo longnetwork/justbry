@@ -6,7 +6,7 @@
 # pylint: disable=W0621,W0123,W0622
 
 
-import asyncio, gzip, json
+import sys, asyncio, gzip, json, random
 
 from time import time
 
@@ -29,6 +29,7 @@ class DomMorph(DomHtml):
 
     morphendpoint = MorphEndpoint;  # Один маршрут сокета с параметром на все dom
 
+    dom_salt = random.randint(1, 2**64 - 1) % sys.hash_info.modulus
 
     def __init__(self, /, *body_components, static="/", version=None, **kwargs):
 
@@ -40,7 +41,7 @@ class DomMorph(DomHtml):
             # 'Expires': "0",
         }
 
-        self.dom_id = str(id(self))
+        self.dom_id = str( (id(self) * 31 + self.dom_salt) % sys.hash_info.modulus )
 
         baseroute = self.morphendpoint.morphroute.rsplit('/', 1)[0] or "/dom"
 
@@ -252,18 +253,18 @@ class DomMorph(DomHtml):
 
                 for d in data:
                     match d:
-                        case "outerHTML", _id, _, str(outerHTML) if _id is not None:  # outerHTML уже содержит новый id
+                        case "outerHTML", _id, _, str() as outerHTML if _id is not None:  # outerHTML уже содержит новый id
                             el = document.getElementById(str(_id))
                             if el:
                                 el.outerHTML = outerHTML
 
-                        case "innerHTML", _id, id, str(innerHTML) if _id is not None:
+                        case "innerHTML", _id, id, str() as innerHTML if _id is not None:
                             el = document.getElementById(str(_id))
                             if el:
                                 el.innerHTML = innerHTML
                             if id is not None and id != _id: updids.append( (el, id) )
 
-                        case "attrs", _id, id, dict(attrs) if _id is not None:
+                        case "attrs", _id, id, dict() as attrs if _id is not None:
                             el = document.getElementById(str(_id))
                             if el:
                                 attrs = { k.replace('_', '-'): v for k, v in attrs.items() }
@@ -302,13 +303,13 @@ class DomMorph(DomHtml):
                             if el:
                                 el.remove()
 
-                        case "afterbegin", _id, id, str(outerHTML) if _id is not None:
+                        case "afterbegin", _id, id, str() as outerHTML if _id is not None:
                             el = document.getElementById(str(_id))
                             if el:
                                 el.insertAdjacentHTML('afterbegin', outerHTML)
                             if id is not None and id != _id: updids.append( (el, id) )
 
-                        case "beforeend", _id, id, str(outerHTML) if _id is not None:
+                        case "beforeend", _id, id, str() as outerHTML if _id is not None:
                             el = document.getElementById(str(_id))
                             if el:
                                 el.insertAdjacentHTML('beforeend', outerHTML)
@@ -331,27 +332,37 @@ class DomMorph(DomHtml):
                 console.timeEnd("Dom Morphing time:")
 
             def _open(ev):
-                global morphhash, wsconnect_timer;  # Этот код при инжекции во фронт-энд попадает как глобальный код (без строки декларации функции)
+                global morphhash, wsconnect_timer
 
                 # Если сокет успешно открылся, очищаем таймер реконнекта (на всякий случай)
                 if wsconnect_timer: timer.clear_timeout(wsconnect_timer); wsconnect_timer = None
 
-                # Если это ПОВТОРНОЕ успешное открытие после сбоя (когда morphhash уже был заполнен ранее), то принудительно обновляем страницу
-                if morphhash:
-                    console.warn(f"Morpher Restore: {morphhash=}, Reload...")
-                    morphhash = '';  # Раз у нас идет reload, то morphhash назначится после успешного редиректа новый
-                    # timer.set_timeout(window.location.replace, int(RELOAD_TIMEOUT * 1000 / 3), window.location.href)
-                    window.location.replace(window.location.href)
+
+                # Случай когда вкладка спала а сервер перезапустили приведет к перезагрузке 
+                # так или иначе, так как сервер закроет сокет для не действительного MORPHROUTE
+
+                wokeup = (morphhash == '_wokeup_')
+                if not morphhash or wokeup:
+                    # Первичный запуск (обычная загрузка страницы) или пробуждение вкладки мобильного браузера
+                    # ev.srcElement.send("_ping_")
+                    el = document.getElementsByName("morphhash"); el = el and el[0]
+                    if el:
+                        morphhash = el.content
+                        ev.srcElement.send(morphhash)
+                        if not wokeup:
+                            console.info(f"Morpher open: {morphhash=}")
+                        else:
+                            console.info(f"Morpher wokeup: {morphhash=}")
                     return
 
-                # Первичный запуск (обычная загрузка страницы)
-                # ev.srcElement.send("_ping_")
-                el = document.getElementsByName("morphhash"); el = el and el[0]
-                if el:
-                    morphhash = el.content
-                    ev.srcElement.send(morphhash)
-                    console.info(f"Morpher open: {morphhash=}")
+                # Если это ПОВТОРНОЕ успешное открытие после сбоя (когда morphhash уже был заполнен ранее), - принудительно обновляем страницу
+                console.warn(f"Morpher Restore: {morphhash=}, Reload...")
+                morphhash = '';  # Раз у нас идет reload, то morphhash назначится после успешного редиректа новый
+                # timer.set_timeout(window.location.replace, int(RELOAD_TIMEOUT * 1000 / 3), window.location.href)
+                window.location.replace(window.location.href)
+                return
 
+                
             def _close(_ev):
                 global morphhash, wsconnect_timer;  # noqa
 
@@ -411,8 +422,6 @@ class DomMorph(DomHtml):
                     # Если упало даже создание объекта, пробуем снова через таймаут
                     wsconnect_timer = timer.set_timeout(start_wsconnect_cycle, int(RELOAD_TIMEOUT * 1000 * 3))
 
-            start_wsconnect_cycle();  # Первый коннект при загрузке страницы
-
             # Дополнительная страховка: если включили кабель/Wi-Fi, мгновенно пинаем реконнект, не дожидаясь таймера
             try: window.bind('online', lambda ev: start_wsconnect_cycle())
             except: pass
@@ -426,6 +435,27 @@ class DomMorph(DomHtml):
                     ws.close()
 
             window.bind('beforeunload', _beforeunload)
+
+            # Мобильные браузере рвут соединение сокета в фоне если вкладка свернута и нужно корректно восстановить
+            # связь без принудительного window.location.replace(window.location.href) в _open()
+
+            def _visibilitychange(_ev):
+                global morphhash, ws;  # noqa
+
+                # Если пользователь развернул браузер или разблокировал экран
+                if document.visibilityState == 'visible':
+                    
+                    # Если сокет не существует или он НЕ в состоянии OPEN после фона, то форсируем мгновенный реконнект 
+                    if not ws or ws.readyState != window.WebSocket.OPEN:
+                        morphhash = '_wokeup_'
+                        start_wsconnect_cycle()
+                    
+                
+            try: document.bind('visibilitychange', _visibilitychange)
+            except: pass
+            
+
+            start_wsconnect_cycle();  # Первый коннект при загрузке страницы
 
         else:
             console.error("Web Sockets are not supported")

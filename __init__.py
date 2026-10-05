@@ -93,7 +93,7 @@ class StaticFiles(_StaticFiles):
 
 class MorphEndpoint(WebSocketEndpoint):
     """
-        Сокет один но обслуживает маршрут /dom/id(dom)
+        Сокет один но обслуживает маршрут /dom/ident(dom)
 
         websocket close codes:
             1000 CLOSE_NORMAL
@@ -120,7 +120,7 @@ class MorphEndpoint(WebSocketEndpoint):
     morphroute = "/dom/{dom_id}"
 
         
-    doms = {};  # {str(id(dom)): dom, ...} удерживает dom пока не будут закрыты все сокеты
+    doms = {};  # {str(ident(dom)): dom, ...} удерживает dom пока не будут закрыты все сокеты
                 # Не может быть weakref.WeakValueDictionary(), так как dom могут создаваться на лету
                 # и это единственное место где он удерживается в памяти (единственная ссылка на dom)
     
@@ -191,7 +191,7 @@ class ReactEndpoint(HTTPEndpoint):
 
     reactroute = "/evt/{dom_id}"
 
-    doms = weakref.WeakValueDictionary();  # {str(id(dom)): dom, ...} Будет удерживаться пока есть в MorphEndpoint.doms
+    doms = weakref.WeakValueDictionary();  # {str(ident(dom)): dom, ...} Будет удерживаться пока есть в MorphEndpoint.doms
 
     headers = {
         # 'Content-Type': "text/plain;charset=UTF-8",
