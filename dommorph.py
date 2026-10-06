@@ -29,7 +29,9 @@ class DomMorph(DomHtml):
 
     morphendpoint = MorphEndpoint;  # Один маршрут сокета с параметром на все dom
 
-    dom_salt = random.randint(1, 2**64 - 1) % sys.hash_info.modulus
+    DOMSALT = random.randint(1, 2**64 - 1) % sys.hash_info.modulus
+
+    THROTTLING = 3600
 
     def __init__(self, /, *body_components, static="/", version=None, **kwargs):
 
@@ -41,7 +43,7 @@ class DomMorph(DomHtml):
             # 'Expires': "0",
         }
 
-        self.dom_id = str( (id(self) * 31 + self.dom_salt) % sys.hash_info.modulus )
+        self.dom_id = str( (id(self) * 31 + self.DOMSALT) % sys.hash_info.modulus )
 
         baseroute = self.morphendpoint.morphroute.rsplit('/', 1)[0] or "/dom"
 
@@ -348,7 +350,7 @@ class DomMorph(DomHtml):
                     el = document.getElementsByName("morphhash"); el = el and el[0]
                     if el:
                         morphhash = el.content
-                        ev.srcElement.send(morphhash)
+                        ev.srcElement.send(morphhash);  # Если сервер не перезапускался то morphhash не изменился
                         if not wokeup:
                             console.info(f"Morpher open: {morphhash=}")
                         else:
@@ -432,16 +434,14 @@ class DomMorph(DomHtml):
             # связь без принудительного window.location.replace(window.location.href) в _open()
             def _visibilitychange(_ev):
                 global morphhash, ws;  # noqa
-
                 # Если пользователь развернул браузер или разблокировал экран
                 if document.visibilityState == 'visible':
-                    
                     # Если сокет не существует или он НЕ в состоянии OPEN после фона, то форсируем мгновенный реконнект 
                     if not ws or ws.readyState != window.WebSocket.OPEN:
                         morphhash = '_wokeup_'
                         start_wsconnect_cycle()
                 
-            try: document.bind('visibilitychange', _visibilitychange)
+            try: document.bind('visibilitychange', _visibilitychange);  # resume
             except: pass
 
             # Это необходимо что бы закрытие сокета шло до того как пойдет новый запрос при обновлении страницы
@@ -480,7 +480,7 @@ class DomMorph(DomHtml):
 
             # Обязаны проверить зомби-morphhash созданные ботами без скриптов (без открытия сокетов)
             # Все для которых долго не открыты сокеты - зомби
-            ctime = time() - 60;  # FIXME Захардкодил
+            ctime = time() - max(self.THROTTLING // 60, 60)
 
             workers = set(m for _, m, _ in self.morphsockets.values());  # Все для которых открыты сокеты
             zombies = set(m for m, t in self._responses.items() if t < ctime)
@@ -552,6 +552,8 @@ class DomMorph(DomHtml):
                 for e in results:
                     if isinstance(e, Exception):
                         if (log := getLogger()): log.exception(e)
+
+                        
 
             return bool(updates);  # False когда холостая отработка
 

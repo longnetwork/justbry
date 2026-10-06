@@ -169,19 +169,22 @@ class MorphEndpoint(WebSocketEndpoint):
             return
             
         async with dom.alock:
+            # 1006 Abnormal Closure
+            # 1005 No Status Received - при close/reload вкладки
+            # 1012 Service restart - При завершении сервера
+            # 1001 Going Away - после Разморозки (freeze)
             
             _, morphhash, _ = dom.morphsockets.pop(websocket, (None, None, None))
 
-            # if close_code == 1001:
-            if True:
-                # Вкладка/браузер закрыли - подчистка ресурсов если morphhash больше не юзается
-                # FIXME Избежать пробегания в цикле при использовании weakref на websocket 
-                if not any( m == morphhash for _, m, _ in dom.morphsockets.values()):
-                    dom.responses.pop(morphhash, None); dom._responses.pop(morphhash, None);
-                    if (log := getLogger()): log.info(f"Clean responses: {morphhash=}")
-                    if not dom.responses:
-                        self.doms.pop(dom_id, None)
-                        if (log := getLogger()): log.info(f"Clean dom: {dom_id=}")
+            # Подчистка ресурсов если morphhash больше не юзается
+            # FIXME Избежать пробегания в цикле при использовании weakref на websocket 
+            if not any( m == morphhash for _, m, _ in dom.morphsockets.values()):
+                dom.responses.pop(morphhash, None); dom._responses.pop(morphhash, None);
+                if (log := getLogger()): log.info(f"Clean responses: {morphhash=}")
+                if not dom.responses:
+                    self.doms.pop(dom_id, None)
+                    if (log := getLogger()): log.info(f"Clean dom: {dom_id=}")
+            pass
 
 
 class ReactEndpoint(HTTPEndpoint):
