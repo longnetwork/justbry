@@ -4,6 +4,9 @@
 """
 
 import re, weakref, gzip, inspect, logging
+
+from time import time
+
 # from ast import literal_eval
 import json
 
@@ -123,13 +126,26 @@ class MorphEndpoint(WebSocketEndpoint):
     doms = {};  # {str(ident(dom)): dom, ...} удерживает dom пока не будут закрыты все сокеты
                 # Не может быть weakref.WeakValueDictionary(), так как dom могут создаваться на лету
                 # и это единственное место где он удерживается в памяти (единственная ссылка на dom)
+                
+    # alock = asyncio.Lock()
     
     async def on_connect(self, websocket):
-        await websocket.accept()
-        dom_id = str(websocket.path_params.get('dom_id'))
-        if dom_id not in self.doms:
-            await websocket.close(1008, "unknown dom_id")
-                
+        try:
+            await websocket.accept()
+            dom_id = str(websocket.path_params.get('dom_id'))
+            if dom_id not in self.doms:
+                await websocket.close(1008, "unknown dom_id")
+        finally:
+            # До того как зарегистрируется новый dom в doms (в on_receive) мы можем подчистить
+            # от тех dom у которых пустой dom.responses
+            # FIXME: можно не каждый раз подчищать, а периодически или при достижении критического размера doms
+            for dom_id, dom in list(self.doms.items()):
+                async with dom.alock:
+                    dom.throttling()
+                    if not dom.responses:
+                        self.doms.pop(dom_id, None)
+                        if (log := getLogger()): log.info(f"Clean dom: {dom_id=}")
+        
     async def on_receive(self, websocket, data):
         if not isinstance(data, (str, bytes)):
             await websocket.close(1003, "unsupported data")
@@ -152,9 +168,10 @@ class MorphEndpoint(WebSocketEndpoint):
             async with dom.alock:
                 morphhash = int(data)
                 if morphhash in dom.responses:
-                    body, _, bodyhash = dom.responses[morphhash]
+                    # {morphhash: [deepcopy(self.body), HTMLResponse(self.render()), bodyhash, resptime]}
+                    body, _, bodyhash, _ = dom.responses[morphhash]
                     # Теперь dom может сам себя обновлять на стороне браузера
-                    dom.morphsockets[websocket] = (body, morphhash, bodyhash)
+                    dom.morphsockets[websocket] = [body, morphhash, bodyhash, 0]
                     return
 
         await websocket.close(1008, "unknown morphhash")
@@ -169,23 +186,21 @@ class MorphEndpoint(WebSocketEndpoint):
             return
             
         async with dom.alock:
-            # 1006 Abnormal Closure
-            # 1005 No Status Received - при close/reload вкладки
-            # 1012 Service restart - При завершении сервера
-            # 1001 Going Away - после Разморозки (freeze)
+            # Для бесшовного восстановления связи не должны сразу здесь подчищать
+            # Сокет уже будет новый при открытии (если morphhash в responses еще живой)
+
+            # {websocket: [deepcopy(self.body), morphhash, bodyhash, closetime]}
+            body, morphhash, bodyhash, _ = dom.morphsockets.pop(websocket, [None, None, None, 0])
+            if morphhash in dom.responses:
+                # Фиксируем состояние морфинга когда сокет закрылся на случай нового открытия
+                # resptime - участвует в подчистке зобми которые долго не открывают сокет
+                dom.responses[morphhash][0] = body; dom.responses[morphhash][2] = bodyhash; dom.responses[morphhash][3] = time()
+            else:
+                if (log := getLogger()): log.error("unknown morphhash")
             
-            _, morphhash, _ = dom.morphsockets.pop(websocket, (None, None, None))
+            
 
-            # Подчистка ресурсов если morphhash больше не юзается
-            # FIXME Избежать пробегания в цикле при использовании weakref на websocket 
-            if not any( m == morphhash for _, m, _ in dom.morphsockets.values()):
-                dom.responses.pop(morphhash, None); dom._responses.pop(morphhash, None);
-                if (log := getLogger()): log.info(f"Clean responses: {morphhash=}")
-                if not dom.responses:
-                    self.doms.pop(dom_id, None)
-                    if (log := getLogger()): log.info(f"Clean dom: {dom_id=}")
-            pass
-
+            
 
 class ReactEndpoint(HTTPEndpoint):
     """
