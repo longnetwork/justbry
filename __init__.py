@@ -208,6 +208,8 @@ class MorphEndpoint(WebSocketEndpoint):
         if not dom:
             if (log := getLogger()): log.warning("unknown dom")
             return
+
+        
             
         async with dom.alock:
             # Для бесшовного восстановления связи не должны сразу здесь подчищать

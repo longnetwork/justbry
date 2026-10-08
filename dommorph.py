@@ -199,8 +199,8 @@ class DomMorph(DomHtml):
             decompressed_stream = b.stream().pipeThrough(ds)
             response = Response.new(decompressed_stream)
             return response.text();  # всегда utf-8
-            
-            
+
+
 
 
     @staticmethod
@@ -240,10 +240,6 @@ class DomMorph(DomHtml):
 
             def morphing(data):    # Морфинг DOM
                 console.time("Dom Morphing time:")
-
-                global morphhash;  # noqa
-
-                if not morphhash: return
 
                 if isinstance(data, str): data = JSON.parse(data);  # FIXME literal_eval Багованный (всерает ковычки лишними escap-ами \\)
 
@@ -332,7 +328,9 @@ class DomMorph(DomHtml):
                 console.timeEnd("Dom Morphing time:")
 
             def _open(ev):
-                global morphhash, wsconnect_timer;  # noqa
+                global morphhash
+
+                stop_wsconnect_cycle()
 
                 if not morphhash:
                     # Первичный запуск (обычная загрузка страницы)
@@ -341,7 +339,7 @@ class DomMorph(DomHtml):
                     if el:
                         morphhash = el.content
                         ev.srcElement.send(morphhash);  # Если сервер не перезапускался то morphhash не изменился
-                        
+
                         console.info(f"Morpher open: {morphhash=}")
                     return
 
@@ -352,14 +350,15 @@ class DomMorph(DomHtml):
                 window.location.replace(window.location.href)
                 return
 
-                
             def _close(ev):
-                global morphhash, wsconnect_timer;  # noqa
-                
+                global morphhash, wsconnect_timer
+
+                stop_wsconnect_cycle()
+
                 console.warn(f"Morpher Close: {morphhash=} with {ev.code} {ev.reason}")
 
                 # При остановке сервера 1012, потом при попытках подключения 1006
-                # 1005 - при reload браузера через кнопку
+                # 1005 - при reload браузера через кнопку (или при ws.close())
                 # 1006 - при восстановлении из заморозки (freeze) вкладки
 
                 # Наш сервер сам возвращает только:
@@ -369,13 +368,14 @@ class DomMorph(DomHtml):
                 # Бесшовное восстановление связи на текущем morphhash кроме критических случаев,
                 # которые должны выйти на перезагрузку страницы так или иначе
                 if ev.code not in {1008, }:
-                    morphhash = '';  # Станет из document.getElementsByName("morphhash") при _open()
+                    # Станет из document.getElementsByName("morphhash") при _open() без перезагрузки сайта
+                    if not morphhash.startswith('_href_'): morphhash = '' 
 
+                # Циклы подключения не должны останавливаться никогда. При заморозки вкладки останавливаются
+                # скрипты, и потом возобновляются, - а мы не должны останавливать попытки подключится никогда
                 wsconnect_timer = timer.set_timeout(start_wsconnect_cycle, int(RELOAD_TIMEOUT * 1000))
 
             def _message(ev):
-                global morphhash;  # noqa
-
                 try:
                     if isinstance(ev.data, str):
                         if ev.data == '_pong_':                # XXX Сервер сам пингует сокеты без нашего участия
@@ -387,9 +387,9 @@ class DomMorph(DomHtml):
                             console.info(f"Morpher Realod: {morphhash=}")
                             window.location.assign(href)
                             return
-                            
-                        return 
-                    
+
+                        return
+
                     console.debug(f"Dom Morphing size: {ev.data.size} bytes")
 
                     decompress(ev.data).then(morphing)
@@ -399,7 +399,9 @@ class DomMorph(DomHtml):
 
             def stop_wsconnect_cycle():
                 global wsconnect_timer
-                if wsconnect_timer: timer.clear_timeout(wsconnect_timer); wsconnect_timer = None
+                if wsconnect_timer:
+                    timer.clear_timeout(wsconnect_timer)
+                    wsconnect_timer = None
 
             def start_wsconnect_cycle():
                 """ Инициализация websocket и попытки подключения """
@@ -410,7 +412,7 @@ class DomMorph(DomHtml):
 
                 # Если сетевой интерфейс на ПК вообще выключен, не спамим впустую, - просто планируем следующую проверку
                 if hasattr(window.navigator, 'onLine') and not window.navigator.onLine:
-                    console.warn(f"Morpher Down with offLine: {morphhash=}, Waiting...")
+                    console.warn(f"Morpher OffLine: {morphhash=}, Waiting...")
                     wsconnect_timer = timer.set_timeout(start_wsconnect_cycle, int(RELOAD_TIMEOUT * 1000))
                     return
 
@@ -418,40 +420,43 @@ class DomMorph(DomHtml):
                 try:
                     # Старый сокет умер, создаем абсолютно новый объект
                     ws = websocket.WebSocket(MORPHROUTE)
-                    ws.bind('open', _open)
-                    ws.bind('close', _close)
-                    ws.bind('message', _message)
+                    ws.bind('open', _open); ws.bind('close', _close); ws.bind('message', _message)
                 except Exception as e:
                     console.error(f"Morpher Down with {e}: {morphhash=}, Waiting...")
                     # Если упало даже создание объекта, пробуем снова через таймаут
                     wsconnect_timer = timer.set_timeout(start_wsconnect_cycle, int(RELOAD_TIMEOUT * 1000 * 3))
 
-            # Дополнительная страховка: если включили кабель/Wi-Fi, мгновенно пинаем реконнект, не дожидаясь таймера
-            try: window.bind('online', lambda ev: start_wsconnect_cycle())
-            except: pass
-
-            # Мобильные браузере рвут соединение сокета в фоне если вкладка свернута и нужно корректно восстановить
-            # связь без принудительного window.location.replace(window.location.href) в _open()
-            def _visibilitychange(_ev):
-                global morphhash, ws;  # noqa
-                # Если пользователь развернул браузер или разблокировал экран
-                if document.visibilityState == 'visible':
-                    # Если сокет не существует или он НЕ в состоянии OPEN после фона, то форсируем мгновенный реконнект 
-                    if not ws or ws.readyState != window.WebSocket.OPEN:
-                        start_wsconnect_cycle()
-                
-            try: document.bind('visibilitychange', _visibilitychange);  # resume
+            # Если включили/переключили кабель/Wi-Fi morphhash не действительный
+            def _online(_ev):
+                global morphhash
+                console.info(f"Morpher Online: {morphhash=}")
+                morphhash = '_href_';  # В этом случае morphhash не может быть действительным (сервер слал апдэйти в пустоту)
+                if ws and ws.readyState in {window.WebSocket.OPEN, window.WebSocket.CONNECTING}: ws.close()
+            try: window.addEventListener('online', _online, {'capture': True})
             except: pass
 
             # Это необходимо что бы закрытие сокета шло до того как пойдет новый запрос при обновлении страницы
             # (Chromium подглючивает на этом месте: https://issues.chromium.org/issues/40839988)
             def _beforeunload(_ev):
-                global morphhash, ws;  # noqa
-                if ws and ws.readyState == window.WebSocket.OPEN: ws.close()
-
-            try: window.bind('beforeunload', _beforeunload)
+                global morphhash
+                console.warn(f"Morpher Unload: {morphhash=}")
+                morphhash = '_href_';  # Закрываем сокет c неизбежной перезагрузкой в _open() (на всякий случай)
+                if ws and ws.readyState in {window.WebSocket.OPEN, window.WebSocket.CONNECTING}: ws.close()
+            try: window.addEventListener('beforeunload', _beforeunload, {'capture': True})
             except: pass
-            
+
+            # Мобильные браузере замораживают соединение сокета в фоне если вкладка свернута и нужно корректно восстановить
+            # связь без принудительного window.location.replace(window.location.href) в _open()
+            # Для этого нам нужно принудительно закрыть сокет, что-бы сервер сохранил текущее состояние
+            # для последующего корректного возобновления морфинга
+            def _freeze(_ev):
+                global morphhash;  # noqa
+                console.warn(f"Morpher Freeze: {morphhash=}")
+                # XXX resume не нужно, так как попытки подключения у нас не останавливаются никогда.
+                if ws and ws.readyState in {window.WebSocket.OPEN, window.WebSocket.CONNECTING}: ws.close()
+            try: window.addEventListener('freeze', _freeze, {'capture': True})
+            except: pass
+
 
             start_wsconnect_cycle();  # Первый коннект при загрузке страницы
 
@@ -470,7 +475,7 @@ class DomMorph(DomHtml):
         zombies -= workers
         if zombies:
             for m in zombies: self.responses.pop(m, None)
-            if (log := getLogger()): log.debug(f"Clean {len(zombies)} zombies")        
+            if (log := getLogger()): log.debug(f"Clean {len(zombies)} zombies")
 
     async def response(self, _request=None):
         """
@@ -508,10 +513,10 @@ class DomMorph(DomHtml):
                     render = self.responses[morphhash][1];  # XXX Кешированный рендер
 
                 return HTMLResponse(render, headers=self.headers)
-                
+
             finally:
                 self.morphendpoint.doms[self.dom_id] = self;  # Регистрация в морфинге
-                
+
 
     async def update(self):
         """
@@ -548,13 +553,19 @@ class DomMorph(DomHtml):
                             if d not in udiffs:
                                 udiffs.append(d)
 
-                        updates.append(socket.send_bytes( gzip.compress(json.dumps(udiffs).encode()) ))
+                        # morphhash менять нельзя, чтобы работала очистка self.responses при закрытии сокета
+                        # То есть morphhash - это первый хешь при первой отдачи response на сторону браузера
+                        # [bodycopy, morphhash, bodyhash, closetime]
 
-                    # morphhash менять нельзя, чтобы работала очистка self.responses при закрытии сокета
-                    # То есть morphhash - это первый хешь при первой отдачи response на сторону браузера
-                    # [bodycopy, morphhash, bodyhash, closetime]
-                    
-                    self.morphsockets[socket][0] = bodycopy; self.morphsockets[socket][2] = bodyhash;
+                        async def _send_updates(socket=socket,
+                                                data=gzip.compress(json.dumps(udiffs).encode()),
+                                                bodycopy=bodycopy, bodyhash=bodyhash):  # Замыкания по всем данным
+                            r = await socket.send_bytes(data)
+                            # Если нет исключений (успешно отправили diffs), то можем зафиксировать новое состояние
+                            self.morphsockets[socket][0] = bodycopy; self.morphsockets[socket][2] = bodyhash;
+                            return r
+
+                        updates.append(_send_updates());                                # Замыкания подхвачены в текущей итерации
 
             if updates:
                 results = await asyncio.gather(*updates, return_exceptions=True)
