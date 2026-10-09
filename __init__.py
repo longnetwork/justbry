@@ -2,6 +2,7 @@
 """
     Модуль justbry как надстройка над starlette и точка импорта системных классов
 """
+# pylint: disable=R1708
 
 import re, weakref, gzip, inspect, logging
 
@@ -118,7 +119,6 @@ class MorphEndpoint(WebSocketEndpoint):
 
             TODO Помним про безопасность, чтобы не слать от сервера данные не предназначенные другим сессиям
     """
-    encoding = "text";  # FIXME brython на стороне браузера работает только со строками
 
     morphroute = "/dom/{dom_id}"
 
@@ -128,24 +128,22 @@ class MorphEndpoint(WebSocketEndpoint):
                 # и это единственное место где он удерживается в памяти (единственная ссылка на dom)
 
     @staticmethod
-    def _doms_iterator(doms: dict):        
-        idx = 0
+    def _doms_iterator(doms: dict):
+        """
+            Колцевой по словарю. FIXME: если словарь изменился то то начинает сначала
+        """
+        gen = ( item for i, item in enumerate(doms.items()) )
         while True:
-            # 1. Если словарь пустой — выдаем None и сбрасываем указатель
-            if not doms:
-                idx = 0
-                yield None, None
-                continue
-            # 2. Если указатель ушел за пределы (из-за удалений или конца словаря) — в начало
-            if idx >= len(doms):
-                idx = 0
             try:
-                # 3. Достаем ключ по текущему порядковому номеру за один проход (без копирования всего словаря)
-                yield next(item for i, item in enumerate(doms.items()) if i == idx)
-                idx += 1  # Сдвигаемся дальше только если успешно забрали ключ
-            except StopIteration:
-                # Сюда попадем, если элементы удалили прямо во время работы enumerate()
-                idx = 0
+                yield next(gen)
+            except Exception:  # StopIteration, RuntimeError: dictionary changed size during iteration
+                gen = ( item for i, item in enumerate(doms.items()) )
+                try:
+                    yield next(gen)
+                except Exception:
+                    gen = ( item for i, item in enumerate(doms.items()) )
+                    yield None, None
+                
     iterdoms = _doms_iterator(doms)
                     
     # alock = asyncio.Lock()
@@ -159,15 +157,26 @@ class MorphEndpoint(WebSocketEndpoint):
         finally:
             # До того как зарегистрируется новый dom в doms (в on_receive) мы можем подчистить
             # от тех dom у которых пустой dom.responses (не спешно)
-            while True:
+
+            curdom = self.doms.get(dom_id)
+            if curdom is not None:
+                async with curdom.alock:
+                    curdom.throttling()
+
+            cnt = 2;  # Нужно для случая когда self.doms содержит только один curdom
+            while cnt > 0:
                 dom_id, dom = next(self.iterdoms)
                 if dom is not None:
-                    async with dom.alock:
-                        dom.throttling()
-                        if not dom.responses:
-                            self.doms.pop(dom_id, None)
-                            if (log := getLogger()): log.info(f"Clean dom: {dom_id=}")
-                            continue  # Ускорение очистки зомби
+                    if dom is not curdom:
+                        async with dom.alock:
+                            dom.throttling()
+                            if not dom.responses:
+                                self.doms.pop(dom_id, None)
+                                if (log := getLogger()): log.info(f"Clean dom: {dom_id=}")
+                                continue  # Ускорение очистки зомби
+                    cnt -= 1
+                    continue
+                
                 break
         
     async def on_receive(self, websocket, data):
