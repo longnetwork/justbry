@@ -677,18 +677,19 @@ class DomHtml(Cmp):
 
 
                 css := Cmp('link', rel="stylesheet", href = static + "bulma.min.css" + (f"?v={version}" if version else "")),
+                # css := Cmp('link', rel="stylesheet", href = static + "pico.min.css" + (f"?v={version}" if version else "")),
+                
                 style := Cmp('style', id='style')("""
-                    [data-theme=light],
-                    .theme-light {
-                        background-color: var(--bulma-light);
+                    [data-theme=light], .theme-light {
+                        /* background-color: var(--bulma-light); */
                     }
-                    [data-theme=dark],
-                    .theme-dark {
-                        background-color: var(--bulma-dark);
+                    [data-theme=dark], .theme-dark {
+                        /* background-color: var(--bulma-dark); */
                     }
                 """),
-                icons := Cmp('script', src = static + "fontawesome_all.js" + (f"?v={version}" if version else ""), defer=True),
-
+                
+                # icons := Cmp('script', src = static + "fontawesome_all.js" + (f"?v={version}" if version else ""), defer=True),
+                icons := Cmp('link', rel="stylesheet", href = static + "remixicon.min.css" + (f"?v={version}" if version else "")),
 
                 Cmp('script', src = static + "brython.min.js" + (f"?v={version}" if version else ""), defer=deferbry),
                 libbry := Cmp('script', src = static + "brython_stdlib.min.js" + (f"?v={version}" if version else ""), defer=deferbry),

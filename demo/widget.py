@@ -112,7 +112,7 @@ class HSplitter(Cmp):
 
         splitter.add(
             Cmp('span', classes="icon is-small")(
-                Cmp('i', classes="fas fa-grip-lines-vertical fa-xs")
+                Cmp('i', classes="ri-expand-left-right-line")
             )
         )
 
@@ -163,7 +163,7 @@ class VSplitter(Cmp):
 
         splitter.add(
             Cmp('span', classes="icon is-small")(
-                Cmp('i', classes="fas fa-grip-lines fa-xs")
+                Cmp('i', classes="ri-expand-up-down-line")
             )
         )
 

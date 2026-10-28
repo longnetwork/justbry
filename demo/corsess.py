@@ -75,15 +75,15 @@ class DomView(DomReact):
                 Cmp('div', classes="columns is-justify-content-center")(Cmp('div', classes="column is-two-fifths")(
                     # onsubmit="return false;" - если reload контролируем сами через await self.locate()
                     _form := Cmp('form', id='form', classes="box", onsubmit="return false;")(
-                        _login := cls.input_field("fas fa-user", "Login",
+                        _login := cls.input_field("ri-user-fill", "Login",
                                                   type='text',
                                                   placeholder="Enter Login",
                                                   error=""),
-                        _password := cls.input_field("fas fa-lock", "Password",
+                        _password := cls.input_field("ri-lock-fill", "Password",
                                                      type='password',
                                                      placeholder="Enter Password",
                                                      error=""),
-                        _button := cls.button_react("fas fa-arrow-right", "Submit", type='submit', form='form'),
+                        _button := cls.button_react("ri-login-box-line", "Submit", type='submit', form='form'),
                     )
                 )),
             ),
