@@ -96,6 +96,7 @@ async def homepage(request):
             emitter_scripts(),  # Внедрение необходимых фронт-енд скриптов
         )
     )
+    dom.head[dom.head.childs.index(dom.css)] = Cmp('link', rel="stylesheet", href = "/bulma.min.css")
 
 
     async def update_info(req):

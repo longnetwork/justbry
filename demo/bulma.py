@@ -39,7 +39,7 @@ dom = DomHtml(
     Cmp('div')(  # data_theme="dark"
         Cmp('h1', classes="title")("Bulma"),
         Cmp('p',  classes='subtitle')(
-            "Modern CSS framework based on", Cmp('a', href="https://bulma.io")("JustBry")
+            "Modern CSS framework based on", Cmp('a', href="https://bulma.io", target="_blank")("Flex/Grid")
         ),
         Cmp('div', classes="message is-success")(
             Cmp('div', classes="message-body")(
@@ -68,7 +68,7 @@ dom = DomHtml(
         """),
     ),
 )
-
+dom.head[dom.head.childs.index(dom.css)] = Cmp('link', rel="stylesheet", href = "/bulma.min.css")
 
 print(dom.render())
 

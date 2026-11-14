@@ -36,6 +36,7 @@ dom = DomMorph(
         )
     )
 )
+dom.head[dom.head.childs.index(dom.css)] = Cmp('link', rel="stylesheet", href = "/bulma.min.css")
 
 print(dom.render())
 

@@ -133,6 +133,8 @@ class DomView(DomReact):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        self.head[self.head.childs.index(self.css)] = Cmp('link', rel="stylesheet", href = "/bulma.min.css")
         
         self.body.add(
             Cmp('div', classes="container is-flex is-justify-content-center")(

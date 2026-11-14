@@ -7,6 +7,7 @@ Python scripts into the frontend for Ajax, React, or anything else.
 
 ```
 python -m uvicorn --log-level debug justbry.demo.bulma:app
+python -m uvicorn --log-level debug justbry.demo.pico:app
 python -m uvicorn --log-level debug justbry.demo.dom:app
 python -m uvicorn --log-level debug justbry.demo.async:app
 python -m uvicorn --log-level debug justbry.demo.morph:app

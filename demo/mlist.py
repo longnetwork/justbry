@@ -17,6 +17,7 @@ dom = DomMorph(
         *( (ul := Cmp('ul'))(Cmp('b')(f"Lorem Ipsum {ul.id}")) for _ in range(LIST_SIZE))
     )
 )
+dom.head[dom.head.childs.index(dom.css)] = Cmp('link', rel="stylesheet", href = "/bulma.min.css")
 
 print(dom.render())
 
